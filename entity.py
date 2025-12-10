@@ -40,4 +40,10 @@ class CandleStick:
 
     @property
     def is_bullish(self) -> bool:
-        return self.close >= self.open
+        return self.close > self.open
+
+    @property
+    def body_ratio(self) -> float:
+        if self.length == 0:
+            return 0
+        return self.body_length / self.length
