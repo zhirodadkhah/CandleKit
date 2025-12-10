@@ -1,33 +1,30 @@
 from entity import CandleStick
 
 # --- Shared helpers ---
-def is_thick_enough(candle, min_ratio):
+# --- Shared helpers ---
+def is_thick_enough(candle: CandleStick, min_ratio: float) -> bool:
+    """Check if candle has a thick body (strong conviction), regardless of direction."""
     return candle.body_ratio >= min_ratio
 
+def is_thick_bearish(candle: CandleStick, min_ratio: float) -> bool:
+    """Check if candle is bearish and has a thick body."""
+    return not candle.is_bullish and candle.body_ratio >= min_ratio
 
-def is_thick_bearish(candle, min_ratio):
-    return (
-            not candle.is_bullish
-            and candle.body_ratio >= min_ratio)
+def is_thick_bullish(candle: CandleStick, min_ratio: float) -> bool:
+    """Check if candle is bullish and has a thick body."""
+    return candle.is_bullish and candle.body_ratio >= min_ratio
 
-
-def is_thick_bullish(candle, min_ratio):
-    return (candle.is_bullish
-            and candle.body_ratio >= min_ratio)
-
-
-def is_thin_enough(candle, max_ratio):
+def is_thin_enough(candle: CandleStick, max_ratio: float) -> bool:
+    """Check if candle has a thin body (indecision), regardless of direction."""
     return candle.body_ratio <= max_ratio
 
+def is_thin_bearish(candle: CandleStick, max_ratio: float) -> bool:
+    """Check if candle is bearish and has a thin body."""
+    return not candle.is_bullish and candle.body_ratio <= max_ratio
 
-def is_thin_bearish (candle, max_ratio):
-    return (not candle.is_bullish
-            and candle.body_ratio <= max_ratio)
-
-
-def is_thin_bullish (candle, max_ratio):
-    return (candle.is_bullish
-            and candle.body_ratio <= max_ratio)
+def is_thin_bullish(candle: CandleStick, max_ratio: float) -> bool:
+    """Check if candle is bullish and has a thin body."""
+    return candle.is_bullish and candle.body_ratio <= max_ratio
 
 
 def is_doji(candle: CandleStick, max_body_ratio: float = 0.05) -> bool:
@@ -395,8 +392,8 @@ def is_tweezer_tops(candles: list,
     avg_length = (prev.length + curr.length) / 2
     if avg_length == 0:
         return False
-    return (is_thick_enough(prev, min_body_ratio)
-            and is_thick_enough(curr, min_body_ratio)
+    return (is_thick_bullish(prev, min_body_ratio)
+            and is_thick_bullish(curr, min_body_ratio)
             and abs(prev.high - curr.high) <= avg_length * price_tolerance)
 
 
@@ -417,7 +414,7 @@ def is_tweezer_bottoms(candles: list,
     if avg_length == 0:
         return False
     return (is_thick_enough(prev, min_body_ratio)
-            and is_thick_enough(curr, min_body_ratio)
+            and is_thick_bearish(curr, min_body_ratio)
             and abs(prev.low - curr.low) <= avg_length * price_tolerance)
 
 
@@ -525,36 +522,39 @@ def is_bearish_tasuki_gap(candles: list, min_body_ratio: float = 0.3) -> bool:
             and is_thick_bearish(nxt, min_body_ratio))
 
 
-def is_bullish_kicking(candles: list, max_wick_ratio: float = 0.05) -> bool:
+def is_bullish_kicking(candles: list, max_wick_ratio: float = 0.05, min_body_ratio: float = 0.7) -> bool:
     """
     Bullish Kicking: bearish marubozu followed by bullish marubozu with upward gap.
     :param candles: list of at least 2 CandleStick (latest last)
     :param max_wick_ratio: tolerance for wicks in marubozu
+    :param min_body_ratio: minimum body/candle ratio for all candles
     :return: bool
     """
     if len(candles) < 2:
         return False
     prev, curr = candles[-2], candles[-1]
-    return (not prev.is_bullish
+    return (is_thick_bearish(prev, min_body_ratio)
             and is_marubozu(prev, max_wick_ratio)
-            and curr.is_bullish
+            and is_thick_bullish(curr, min_body_ratio)
             and is_marubozu(curr, max_wick_ratio)
             and curr.open > prev.open)
 
 
-def is_bearish_kicking(candles: list, max_wick_ratio: float = 0.05) -> bool:
+
+def is_bearish_kicking(candles: list, max_wick_ratio: float = 0.05, min_body_ratio: float = 0.7) -> bool:
     """
     Bearish Kicking: bullish marubozu followed by bearish marubozu with downward gap.
     :param candles: list of at least 2 CandleStick (latest last)
     :param max_wick_ratio: tolerance for wicks in marubozu
+    :param min_body_ratio: minimum body/candle ratio for all candles
     :return: bool
     """
     if len(candles) < 2:
         return False
     prev, curr = candles[-2], candles[-1]
-    return (prev.is_bullish
+    return (is_thick_bullish(prev, min_body_ratio)
             and is_marubozu(prev, max_wick_ratio)
-            and not curr.is_bullish
+            and is_thick_bearish(curr, min_body_ratio)
             and is_marubozu(curr, max_wick_ratio)
             and curr.open < prev.open)
 
