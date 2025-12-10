@@ -1,51 +1,73 @@
 from entity import CandleStick
 
-has_thick_body = lambda candle, min_body_ratio: candle.body_ratio >= min_body_ratio
+# --- Shared helpers ---
+def is_thick_enough(candle, min_ratio):
+    return candle.body_ratio >= min_ratio
 
-has_thin_body = lambda candle, max_body_ratio: candle.body_ratio <= max_body_ratio
+
+def is_thick_bearish(candle, min_ratio):
+    return (
+            not candle.is_bullish
+            and candle.body_ratio >= min_ratio)
 
 
-def is_doji(candle: CandleStick, max_body_ratio: 0.05) -> bool:
+def is_thick_bullish(candle, min_ratio):
+    return (candle.is_bullish
+            and candle.body_ratio >= min_ratio)
+
+
+def is_thin_enough(candle, max_ratio):
+    return candle.body_ratio <= max_ratio
+
+
+def is_thin_bearish (candle, max_ratio):
+    return (not candle.is_bullish
+            and candle.body_ratio <= max_ratio)
+
+
+def is_thin_bullish (candle, max_ratio):
+    return (candle.is_bullish
+            and candle.body_ratio <= max_ratio)
+
+
+def is_doji(candle: CandleStick, max_body_ratio: float = 0.05) -> bool:
     """
-    Candlestick's body is less than 5% of candle.
+    Candlestick's body is very small relative to its total length.
     :param candle: CandleStick
     :param max_body_ratio: maximum body/candle ratio. < 1
-    :return:
+    :return: bool
     """
-    if candle.body_length == 0:
-        return False
-
-    return True if candle.body_ratio <= max_body_ratio else False
+    return candle.body_ratio <= max_body_ratio
 
 
 def is_dragonfly(candle: CandleStick,
-                 max_body_ratio: 0.05,
-                 top_wick_ratio=0.1,
-                 bottom_wick_ratio=0.6) -> bool:
+                 max_body_ratio: float = 0.05,
+                 top_wick_ratio: float = 0.1,
+                 bottom_wick_ratio: float = 0.6) -> bool:
     """
-    :param candle:
-    :param max_body_ratio:
-    :param top_wick_ratio: top wick max ration to candle length
-    :param bottom_wick_ratio: bottom wick min ration to candle length
-    :return:
+    Dragonfly Doji: long lower wick, no upper wick.
+    :param candle: CandleStick
+    :param max_body_ratio: maximum body/candle ratio
+    :param top_wick_ratio: top wick max ratio to candle length
+    :param bottom_wick_ratio: bottom wick min ratio to candle length
+    :return: bool
     """
     return (is_doji(candle, max_body_ratio)
             and candle.top_wick <= candle.length * top_wick_ratio
             and candle.bottom_wick >= candle.length * bottom_wick_ratio)
 
 
-def is_gravestone(
-    candle: CandleStick,
-    max_body_ratio: float = 0.05,
-    top_wick_ratio: float = 0.6,
-    bottom_wick_ratio: float = 0.1,
-) -> bool:
+def is_gravestone(candle: CandleStick,
+                  max_body_ratio: float = 0.05,
+                  top_wick_ratio: float = 0.6,
+                  bottom_wick_ratio: float = 0.1) -> bool:
     """
-    :param candle:
-    :param max_body_ratio:
+    Gravestone Doji: long upper wick, no lower wick.
+    :param candle: CandleStick
+    :param max_body_ratio: maximum body/candle ratio
     :param top_wick_ratio: top wick min ratio to candle length
     :param bottom_wick_ratio: bottom wick max ratio to candle length
-    :return:
+    :return: bool
     """
     return (is_doji(candle, max_body_ratio)
             and candle.top_wick >= candle.length * top_wick_ratio
@@ -56,84 +78,81 @@ def is_long_legged(candle: CandleStick,
                    max_body_ratio: float = 0.05,
                    min_wick_ratio: float = 0.4) -> bool:
     """
-    :param candle:
-    :param max_body_ratio:
+    Long-Legged Doji: both wicks are long.
+    :param candle: CandleStick
+    :param max_body_ratio: maximum body/candle ratio
     :param min_wick_ratio: minimum ratio for both top and bottom wicks relative to candle length
-    :return:
+    :return: bool
     """
     return (is_doji(candle, max_body_ratio)
             and candle.top_wick >= candle.length * min_wick_ratio
             and candle.bottom_wick >= candle.length * min_wick_ratio)
 
 
-def is_hammer(
-    candle: CandleStick,
-    max_body_ratio: float = 0.3,
-    top_wick_ratio: float = 0.1,
-    bottom_wick_ratio: float = 0.6,
-) -> bool:
+def is_hammer(candle: CandleStick,
+              max_body_ratio: float = 0.3,
+              top_wick_ratio: float = 0.1,
+              bottom_wick_ratio: float = 0.6) -> bool:
     """
-    :param candle:
+    Hammer: bullish reversal at support.
+    :param candle: CandleStick
     :param max_body_ratio: maximum body/candle ratio
     :param top_wick_ratio: top wick max ratio to candle length
     :param bottom_wick_ratio: bottom wick min ratio to candle length
-    :return:
+    :return: bool
     """
-    return (candle.is_bullish and candle.body_ratio <= max_body_ratio
+    return (is_thin_bullish(candle, max_body_ratio)
             and candle.top_wick <= candle.length * top_wick_ratio
             and candle.bottom_wick >= candle.length * bottom_wick_ratio)
 
 
-def is_hanging_man(
-    candle: CandleStick,
-    max_body_ratio: float = 0.3,
-    top_wick_ratio: float = 0.1,
-    bottom_wick_ratio: float = 0.6,
-) -> bool:
+def is_hanging_man(candle: CandleStick,
+                   max_body_ratio: float = 0.3,
+                   top_wick_ratio: float = 0.1,
+                   bottom_wick_ratio: float = 0.6) -> bool:
     """
-    :param candle:
+    Hanging Man: bearish reversal at resistance.
+    :param candle: CandleStick
     :param max_body_ratio: maximum body/candle ratio
     :param top_wick_ratio: top wick max ratio to candle length
     :param bottom_wick_ratio: bottom wick min ratio to candle length
-    :return:
+    :return: bool
     """
-    return (not candle.is_bullish and candle.body_ratio <= max_body_ratio
+    return (is_thin_bearish(candle, max_body_ratio)
             and candle.top_wick <= candle.length * top_wick_ratio
             and candle.bottom_wick >= candle.length * bottom_wick_ratio)
 
 
-def is_inverted_hammer(
-    candle: CandleStick,
-    max_body_ratio: float = 0.3,
-    top_wick_ratio: float = 0.6,
-    bottom_wick_ratio: float = 0.1,
-) -> bool:
+def is_inverted_hammer(candle: CandleStick,
+                       max_body_ratio: float = 0.3,
+                       top_wick_ratio: float = 0.6,
+                       bottom_wick_ratio: float = 0.1) -> bool:
     """
-    :param candle:
+    Inverted Hammer: early bullish signal after downtrend.
+    :param candle: CandleStick
     :param max_body_ratio: maximum body/candle ratio
     :param top_wick_ratio: top wick min ratio to candle length
     :param bottom_wick_ratio: bottom wick max ratio to candle length
-    :return:
+    :return: bool
     """
-    return (candle.is_bullish and candle.body_ratio <= max_body_ratio
+    return (is_thin_bullish(candle, max_body_ratio)
             and candle.top_wick >= candle.length * top_wick_ratio
             and candle.bottom_wick <= candle.length * bottom_wick_ratio)
 
 
-def is_shooting_star(
-    candle: CandleStick,
-    max_body_ratio: float = 0.3,
-    top_wick_ratio: float = 0.6,
-    bottom_wick_ratio: float = 0.1,
-) -> bool:
+def is_shooting_star(candle: CandleStick,
+                     max_body_ratio: float = 0.3,
+                     top_wick_ratio: float = 0.6,
+                     bottom_wick_ratio: float = 0.1) -> bool:
     """
-    :param candle:
+    Shooting Star: bearish reversal after uptrend.
+    :param candle: CandleStick
     :param max_body_ratio: maximum body/candle ratio
     :param top_wick_ratio: top wick min ratio to candle length
     :param bottom_wick_ratio: bottom wick max ratio to candle length
-    :return:
+    :return: bool
     """
-    return (not candle.is_bullish and candle.body_ratio <= max_body_ratio
+    return (is_thin_bearish(candle, max_body_ratio)
             and candle.top_wick >= candle.length * top_wick_ratio
             and candle.bottom_wick <= candle.length * bottom_wick_ratio)
 
@@ -142,21 +161,23 @@ def is_spinning_top(candle: CandleStick,
                     max_body_ratio: float = 0.5,
                     min_wick_ratio: float = 0.2) -> bool:
     """
-    :param candle:
+    Spinning Top: small body with long wicks — indecision.
+    :param candle: CandleStick
     :param max_body_ratio: maximum body/candle ratio
     :param min_wick_ratio: minimum ratio for both top and bottom wicks relative to candle length
-    :return:
+    :return: bool
     """
-    return (candle.body_ratio <= max_body_ratio
+    return (is_thin_enough(candle, max_body_ratio)
             and candle.top_wick >= candle.length * min_wick_ratio
             and candle.bottom_wick >= candle.length * min_wick_ratio)
 
 
 def is_marubozu(candle: CandleStick, max_wick_ratio: float = 0.05) -> bool:
     """
-    :param candle:
+    Marubozu: candle with no wicks — strong conviction.
+    :param candle: CandleStick
     :param max_wick_ratio: maximum allowed wick (top or bottom) as ratio of candle length
-    :return:
+    :return: bool
     """
     return (candle.top_wick <= candle.length * max_wick_ratio
             and candle.bottom_wick <= candle.length * max_wick_ratio)
@@ -164,35 +185,33 @@ def is_marubozu(candle: CandleStick, max_wick_ratio: float = 0.05) -> bool:
 
 def is_bullish_engulfing(candles: list, min_body_ratio: float = 0.3) -> bool:
     """
+    Bullish Engulfing: bearish candle engulfed by larger bullish candle.
     :param candles: list of at least 2 CandleStick objects [prev, current]
     :param min_body_ratio: minimum body/candle ratio for both candles to be meaningful
-    :return:
+    :return: bool
     """
     if len(candles) < 2:
         return False
-
     prev, curr = candles[-2], candles[-1]
-
-    return (has_thick_body(prev, min_body_ratio)
-            and has_thick_body(curr, min_body_ratio) and not prev.is_bullish
-            and curr.is_bullish and curr.open <= prev.close
+    return (is_thick_bearish(prev, min_body_ratio)
+            and is_thick_bullish(curr, min_body_ratio)
+            and curr.open <= prev.close
             and curr.close >= prev.open)
 
 
 def is_bearish_engulfing(candles: list, min_body_ratio: float = 0.3) -> bool:
     """
+    Bearish Engulfing: bullish candle engulfed by larger bearish candle.
     :param candles: list of at least 2 CandleStick objects [prev, current]
     :param min_body_ratio: minimum body/candle ratio for both candles to be meaningful
-    :return:
+    :return: bool
     """
     if len(candles) < 2:
         return False
-
     prev, curr = candles[-2], candles[-1]
-
-    return (has_thick_body(prev, min_body_ratio)
-            and has_thick_body(curr, min_body_ratio) and prev.is_bullish
-            and not curr.is_bullish and curr.open >= prev.close
+    return (is_thick_bullish(prev, min_body_ratio)
+            and is_thick_bearish(curr, min_body_ratio)
+            and curr.open >= prev.close
             and curr.close <= prev.open)
 
 
@@ -200,355 +219,343 @@ def is_piercing_line(candles: list,
                      min_body_ratio: float = 0.3,
                      min_penetration: float = 0.5) -> bool:
     """
+    Piercing Line: bullish reversal after downtrend; closes >50% into prior bearish body.
     :param candles: list of at least 2 CandleStick objects [prev, current]
-    :param min_body_ratio: minimum body/candle ratio for both candles to be meaningful
-    :param min_penetration: minimum fraction of prior bearish body that current bullish candle must close into
-    :return:
+    :param min_body_ratio: minimum body/candle ratio for both candles
+    :param min_penetration: minimum fraction of prior bearish body that current candle must penetrate
+    :return: bool
     """
     if len(candles) < 2:
         return False
-
     prev, curr = candles[-2], candles[-1]
-
-    return (has_thick_body(prev, min_body_ratio)
-            and has_thick_body(curr, min_body_ratio) and not prev.is_bullish
-            and curr.is_bullish and curr.open <= prev.low
-            and curr.close > prev.open and curr.close >= prev.open +
-            (prev.close - prev.open) * min_penetration)
+    body_prev = prev.open - prev.close
+    return (is_thick_bearish(prev, min_body_ratio)
+            and is_thick_bullish(curr, min_body_ratio)
+            and curr.open <= prev.low
+            and curr.close > prev.open
+            and (curr.close - prev.open) >= body_prev * min_penetration)
 
 
 def is_dark_cloud_cover(candles: list,
                         min_body_ratio: float = 0.3,
                         min_penetration: float = 0.5) -> bool:
     """
+    Dark Cloud Cover: bearish reversal after uptrend; closes >50% into prior bullish body.
     :param candles: list of at least 2 CandleStick objects [prev, current]
-    :param min_body_ratio: minimum body/candle ratio for both candles to be meaningful
-    :param min_penetration: minimum fraction of prior bullish body that current bearish candle must close into
-    :return:
+    :param min_body_ratio: minimum body/candle ratio for both candles
+    :param min_penetration: minimum fraction of prior bullish body that current candle must penetrate
+    :return: bool
     """
     if len(candles) < 2:
         return False
-
     prev, curr = candles[-2], candles[-1]
-
-    return (has_thick_body(prev, min_body_ratio)
-            and has_thick_body(curr, min_body_ratio) and prev.is_bullish
-            and not curr.is_bullish and curr.open >= prev.high
-            and curr.close < prev.close and curr.close <= prev.close +
-            (prev.open - prev.close) * min_penetration)
+    body_prev = prev.close - prev.open
+    return (is_thick_bullish(prev, min_body_ratio)
+            and is_thick_bearish(curr, min_body_ratio)
+            and curr.open >= prev.high
+            and curr.close < prev.close
+            and (prev.close - curr.close) >= body_prev * min_penetration)
 
 
 def is_morning_star(candles: list,
                     min_body_ratio: float = 0.3,
                     max_middle_body_ratio: float = 0.1) -> bool:
     """
+    Morning Star: bearish → small body → bullish; reversal after downtrend.
     :param candles: list of at least 3 CandleStick objects [prev, curr, nxt]
     :param min_body_ratio: minimum body/candle ratio for first and third candles
-    :param max_middle_body_ratio: maximum body/candle ratio for middle candle (Doji-like)
-    :return:
+    :param max_middle_body_ratio: maximum body/candle ratio for middle candle
+    :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    return (has_thick_body(prev, min_body_ratio)
-            and has_thin_body(curr, max_middle_body_ratio)
-            and has_thick_body(nxt, min_body_ratio) and not prev.is_bullish
-            and nxt.is_bullish and curr.low < prev.low
-            and nxt.high > prev.open)
+    return (is_thick_bearish(prev, min_body_ratio)
+            and is_thin_enough(curr, max_middle_body_ratio)
+            and is_thick_bullish(nxt, min_body_ratio)
+            and curr.low < prev.low
+            and nxt.close > prev.open)
 
 
 def is_evening_star(candles: list,
                     min_body_ratio: float = 0.3,
                     max_middle_body_ratio: float = 0.1) -> bool:
     """
+    Evening Star: bullish → small body → bearish; reversal after uptrend.
     :param candles: list of at least 3 CandleStick objects [prev, curr, nxt]
     :param min_body_ratio: minimum body/candle ratio for first and third candles
-    :param max_middle_body_ratio: maximum body/candle ratio for middle candle (Doji-like)
-    :return:
+    :param max_middle_body_ratio: maximum body/candle ratio for middle candle
+    :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
+    return (is_thick_bullish(prev, min_body_ratio)
+            and is_thin_enough(curr, max_middle_body_ratio)
+            and is_thick_bearish(nxt, min_body_ratio)
+            and curr.high > prev.high
+            and nxt.close < prev.close)
 
-    return (has_thick_body(prev, min_body_ratio)
-            and has_thin_body(curr, max_middle_body_ratio)
-            and has_thick_body(nxt, min_body_ratio) and prev.is_bullish
-            and not nxt.is_bullish and curr.high > prev.high
-            and nxt.low < prev.close)
 
-
-def is_three_white_soldiers(candles: list,
-                            min_body_ratio: float = 0.4) -> bool:
+def is_three_white_soldiers(candles: list, min_body_ratio: float = 0.4) -> bool:
     """
+    Three White Soldiers: three strong bullish candles in a row.
     :param candles: list of at least 3 CandleStick objects [prev, curr, nxt]
     :param min_body_ratio: minimum body/candle ratio for all three candles
-    :return:
+    :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    return (has_thick_body(prev, min_body_ratio)
-            and has_thick_body(curr, min_body_ratio)
-            and has_thick_body(nxt, min_body_ratio) and prev.is_bullish
-            and curr.is_bullish and nxt.is_bullish and curr.open > prev.open
-            and curr.open < prev.close and nxt.open > curr.open
-            and nxt.open < curr.close and curr.close > prev.close
+    return (is_thick_bullish(prev, min_body_ratio)
+            and is_thick_bullish(curr, min_body_ratio)
+            and is_thick_bullish(nxt, min_body_ratio)
+            and curr.open > prev.open
+            and curr.open < prev.close
+            and nxt.open > curr.open
+            and nxt.open < curr.close
+            and curr.close > prev.close
             and nxt.close > curr.close)
 
 
 def is_three_black_crows(candles: list, min_body_ratio: float = 0.4) -> bool:
     """
+    Three Black Crows: three strong bearish candles in a row.
     :param candles: list of at least 3 CandleStick objects [prev, curr, nxt]
     :param min_body_ratio: minimum body/candle ratio for all three candles
-    :return:
+    :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    is_strong = lambda c: c.body_ratio >= min_body_ratio
-
-    return (has_thick_body(prev, min_body_ratio)
-            and has_thick_body(curr, min_body_ratio)
-            and has_thick_body(nxt, min_body_ratio) and not prev.is_bullish
-            and not curr.is_bullish and not nxt.is_bullish
-            and curr.open < prev.open and curr.open > prev.close
-            and nxt.open < curr.open and nxt.open > curr.close
-            and curr.close < prev.close and nxt.close < curr.close)
+    return (is_thick_bearish(prev, min_body_ratio)
+            and is_thick_bearish(curr, min_body_ratio)
+            and is_thick_bearish(nxt, min_body_ratio)
+            and curr.open < prev.open
+            and curr.open > prev.close
+            and nxt.open < curr.open
+            and nxt.open > curr.close
+            and curr.close < prev.close
+            and nxt.close < curr.close)
 
 
 def is_morning_doji_star(candles: list,
                          min_body_ratio: float = 0.3,
                          max_doji_body_ratio: float = 0.05) -> bool:
     """
+    Morning Doji Star: bearish → Doji → bullish; stronger reversal signal.
     :param candles: list of at least 3 CandleStick objects [prev, curr, nxt]
     :param min_body_ratio: minimum body/candle ratio for first and third candles
     :param max_doji_body_ratio: maximum body/candle ratio for middle Doji candle
-    :return:
+    :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    return (is_doji(curr) and has_thick_body(prev, min_body_ratio)
-            and has_thick_body(nxt, min_body_ratio) and not prev.is_bullish
-            and nxt.is_bullish and curr.low < prev.low
-            and nxt.high > prev.open)
+    return (is_doji(curr, max_doji_body_ratio)
+            and is_thick_bearish(prev, min_body_ratio)
+            and is_thick_bullish(nxt, min_body_ratio)
+            and curr.low < prev.low
+            and nxt.close > prev.open)
 
 
 def is_evening_doji_star(candles: list,
                          min_body_ratio: float = 0.3,
                          max_doji_body_ratio: float = 0.05) -> bool:
     """
+    Evening Doji Star: bullish → Doji → bearish; stronger reversal signal.
     :param candles: list of at least 3 CandleStick objects [prev, curr, nxt]
     :param min_body_ratio: minimum body/candle ratio for first and third candles
     :param max_doji_body_ratio: maximum body/candle ratio for middle Doji candle
-    :return:
+    :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    return (is_doji(curr) and has_thick_body(prev, min_body_ratio)
-            and has_thick_body(nxt, min_body_ratio) and prev.is_bullish
-            and not nxt.is_bullish and curr.high > prev.high
-            and nxt.low < prev.close)
+    return (is_doji(curr, max_doji_body_ratio)
+            and is_thick_bullish(prev, min_body_ratio)
+            and is_thick_bearish(nxt, min_body_ratio)
+            and curr.high > prev.high
+            and nxt.close < prev.close)
 
 
 def is_tweezer_tops(candles: list,
                     min_body_ratio: float = 0.2,
                     price_tolerance: float = 0.01) -> bool:
     """
+    Tweezer Tops: two candles with nearly identical highs after uptrend.
     :param candles: list of at least 2 CandleStick objects [prev, current]
-    :param min_body_ratio: minimum body/candle ratio for both candles to be meaningful
-    :param price_tolerance: maximum allowed difference between highs as ratio of average candle length
-    :return:
+    :param min_body_ratio: minimum body/candle ratio for both candles
+    :param price_tolerance: max allowed high difference as ratio of average candle length
+    :return: bool
     """
     if len(candles) < 2:
         return False
-
     prev, curr = candles[-2], candles[-1]
-
-    # Use average length to normalize tolerance
     avg_length = (prev.length + curr.length) / 2
     if avg_length == 0:
         return False
-
-    high_diff = abs(prev.high - curr.high)
-    return (has_thick_body(prev, min_body_ratio)
-            and has_thick_body(curr, min_body_ratio) and prev.high >= prev.open
-            and curr.high >= curr.open
-            and high_diff <= avg_length * price_tolerance)
+    return (is_thick_enough(prev, min_body_ratio)
+            and is_thick_enough(curr, min_body_ratio)
+            and abs(prev.high - curr.high) <= avg_length * price_tolerance)
 
 
 def is_tweezer_bottoms(candles: list,
                        min_body_ratio: float = 0.2,
                        price_tolerance: float = 0.01) -> bool:
     """
+    Tweezer Bottoms: two candles with nearly identical lows after downtrend.
     :param candles: list of at least 2 CandleStick objects [prev, current]
-    :param min_body_ratio: minimum body/candle ratio for both candles to be meaningful
-    :param price_tolerance: maximum allowed difference between lows as ratio of average candle length
-    :return:
+    :param min_body_ratio: minimum body/candle ratio for both candles
+    :param price_tolerance: max allowed low difference as ratio of average candle length
+    :return: bool
     """
     if len(candles) < 2:
         return False
-
     prev, curr = candles[-2], candles[-1]
-
-    # Use average length to normalize tolerance
     avg_length = (prev.length + curr.length) / 2
     if avg_length == 0:
         return False
-
-    low_diff = abs(prev.low - curr.low)
-    return (has_thick_body(prev, min_body_ratio)
-            and has_thick_body(curr, min_body_ratio) and prev.low <= prev.close
-            and curr.low <= curr.close
-            and low_diff <= avg_length * price_tolerance)
-
-
-def is_bearish_harami(candles: list,
-                      min_body_ratio: float = 0.3,
-                      max_inside_body_ratio: float = 0.5) -> bool:
-    """
-    :param candles: list of at least 2 CandleStick objects [prev, current]
-    :param min_body_ratio: minimum body/candle ratio for the first candle
-    :param max_inside_body_ratio: maximum body/candle ratio for the second candle
-    :return:
-    """
-    if len(candles) < 2:
-        return False
-
-    prev, curr = candles[-2], candles[-1]
-
-    return (has_thick_body(prev, min_body_ratio)
-            and has_thin_body(curr, max_inside_body_ratio) and prev.is_bullish
-            and not curr.is_bullish and curr.open < prev.close
-            and curr.close > prev.open)
+    return (is_thick_enough(prev, min_body_ratio)
+            and is_thick_enough(curr, min_body_ratio)
+            and abs(prev.low - curr.low) <= avg_length * price_tolerance)
 
 
 def is_bullish_harami(candles: list,
                       min_body_ratio: float = 0.3,
                       max_inside_body_ratio: float = 0.5) -> bool:
     """
+    Bullish Harami: bearish candle followed by small bullish candle inside its range.
     :param candles: list of at least 2 CandleStick objects [prev, current]
     :param min_body_ratio: minimum body/candle ratio for the first candle
     :param max_inside_body_ratio: maximum body/candle ratio for the second candle
-    :return:
+    :return: bool
     """
     if len(candles) < 2:
         return False
-
     prev, curr = candles[-2], candles[-1]
+    return (is_thick_bearish(prev, min_body_ratio)
+            and is_thin_bullish(curr, max_inside_body_ratio)
+            and prev.low <= curr.low
+            and curr.high <= prev.high)
 
-    return (has_thick_body(prev, min_body_ratio)
-            and has_thin_body(curr, max_inside_body_ratio)
-            and not prev.is_bullish and curr.is_bullish
-            and curr.open > prev.close and curr.close < prev.open)
+
+def is_bearish_harami(candles: list,
+                      min_body_ratio: float = 0.3,
+                      max_inside_body_ratio: float = 0.5) -> bool:
+    """
+    Bearish Harami: bullish candle followed by small bearish candle inside its range.
+    :param candles: list of at least 2 CandleStick objects [prev, current]
+    :param min_body_ratio: minimum body/candle ratio for the first candle
+    :param max_inside_body_ratio: maximum body/candle ratio for the second candle
+    :return: bool
+    """
+    if len(candles) < 2:
+        return False
+    prev, curr = candles[-2], candles[-1]
+    return (is_thick_bullish(prev, min_body_ratio)
+            and is_thin_bearish(curr, max_inside_body_ratio)
+            and prev.low <= curr.low
+            and curr.high <= prev.high)
 
 
 def is_bullish_belt_hold(candle: CandleStick,
                          min_body_ratio: float = 0.7,
                          max_lower_wick_ratio: float = 0.05) -> bool:
     """
+    Bullish Belt Hold: opens at low, strong bullish move.
     :param candle: CandleStick
     :param min_body_ratio: minimum body/candle ratio (strong bullish body)
     :param max_lower_wick_ratio: maximum lower wick as ratio of candle length
-    :return:
+    :return: bool
     """
-    return (candle.is_bullish and has_thick_body(candle, min_body_ratio)
+    return (is_thick_bullish(candle, min_body_ratio)
             and candle.bottom_wick <= candle.length * max_lower_wick_ratio
-            and candle.open == candle.low  # opens at the low
-            )
+            and abs(candle.open - candle.low) <= 1e-9)
 
 
 def is_bearish_belt_hold(candle: CandleStick,
                          min_body_ratio: float = 0.7,
                          max_upper_wick_ratio: float = 0.05) -> bool:
     """
+    Bearish Belt Hold: opens at high, strong bearish move.
     :param candle: CandleStick
     :param min_body_ratio: minimum body/candle ratio (strong bearish body)
     :param max_upper_wick_ratio: maximum upper wick as ratio of candle length
-    :return:
+    :return: bool
     """
-
-    return (not candle.is_bullish and has_thick_body(candle, min_body_ratio)
+    return (is_thick_bearish(candle, min_body_ratio)
             and candle.top_wick <= candle.length * max_upper_wick_ratio
-            and candle.open == candle.high  # opens at the high
-            )
+            and abs(candle.open - candle.high) <= 1e-9)
 
 
 def is_bullish_tasuki_gap(candles: list, min_body_ratio: float = 0.3) -> bool:
     """
+    Bullish Tasuki Gap: bullish continuation with partial gap fill.
     :param candles: list of at least 3 CandleStick objects [prev, curr, nxt]
     :param min_body_ratio: minimum body/candle ratio for all candles
-    :return:
+    :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    return (curr.low > prev.high and nxt.close > prev.high
-            and nxt.close < curr.low and has_thick_body(prev, min_body_ratio)
-            and has_thick_body(curr, min_body_ratio)
-            and has_thick_body(nxt, min_body_ratio) and prev.is_bullish
-            and curr.is_bullish and nxt.is_bullish)
+    return (curr.low > prev.high
+            and nxt.close > prev.high
+            and nxt.close < curr.low
+            and is_thick_bullish(prev, min_body_ratio)
+            and is_thick_bullish(curr, min_body_ratio)
+            and is_thick_bullish(nxt, min_body_ratio))
 
 
 def is_bearish_tasuki_gap(candles: list, min_body_ratio: float = 0.3) -> bool:
     """
+    Bearish Tasuki Gap: bearish continuation with partial gap fill.
     :param candles: list of at least 3 CandleStick objects [prev, curr, nxt]
     :param min_body_ratio: minimum body/candle ratio for all candles
-    :return:
+    :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    return (curr.high < prev.low and nxt.close < prev.low
-            and nxt.close > curr.high and has_thick_body(prev, min_body_ratio)
-            and has_thick_body(curr, min_body_ratio)
-            and has_thick_body(nxt, min_body_ratio) and not prev.is_bullish
-            and not curr.is_bullish and not nxt.is_bullish)
+    return (curr.high < prev.low
+            and nxt.close < prev.low
+            and nxt.close > curr.high
+            and is_thick_bearish(prev, min_body_ratio)
+            and is_thick_bearish(curr, min_body_ratio)
+            and is_thick_bearish(nxt, min_body_ratio))
 
 
 def is_bullish_kicking(candles: list, max_wick_ratio: float = 0.05) -> bool:
     """
+    Bullish Kicking: bearish marubozu followed by bullish marubozu with upward gap.
     :param candles: list of at least 2 CandleStick (latest last)
     :param max_wick_ratio: tolerance for wicks in marubozu
-    :return:
+    :return: bool
     """
     if len(candles) < 2:
         return False
     prev, curr = candles[-2], candles[-1]
-
-    return (not prev.is_bullish and is_marubozu(prev, max_wick_ratio)
-            and curr.is_bullish and is_marubozu(curr, max_wick_ratio)
+    return (not prev.is_bullish
+            and is_marubozu(prev, max_wick_ratio)
+            and curr.is_bullish
+            and is_marubozu(curr, max_wick_ratio)
             and curr.open > prev.open)
 
 
 def is_bearish_kicking(candles: list, max_wick_ratio: float = 0.05) -> bool:
     """
+    Bearish Kicking: bullish marubozu followed by bearish marubozu with downward gap.
     :param candles: list of at least 2 CandleStick (latest last)
     :param max_wick_ratio: tolerance for wicks in marubozu
-    :return:
+    :return: bool
     """
     if len(candles) < 2:
         return False
     prev, curr = candles[-2], candles[-1]
-
-    return (prev.is_bullish and is_marubozu(prev, max_wick_ratio)
-            and not curr.is_bullish and is_marubozu(curr, max_wick_ratio)
+    return (prev.is_bullish
+            and is_marubozu(prev, max_wick_ratio)
+            and not curr.is_bullish
+            and is_marubozu(curr, max_wick_ratio)
             and curr.open < prev.open)
 
 
@@ -556,6 +563,7 @@ def is_bullish_abandoned_baby(candles: list,
                               max_body_ratio: float = 0.05,
                               require_gap: bool = True) -> bool:
     """
+    Bullish Abandoned Baby: rare strong reversal with gaps around Doji.
     :param candles: list of at least 3 CandleStick (latest last)
     :param max_body_ratio: max body ratio for Doji
     :param require_gap: if False, skips gap validation
@@ -563,19 +571,18 @@ def is_bullish_abandoned_baby(candles: list,
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    return (not prev.is_bullish and is_doji(curr, max_body_ratio)
+    return (not prev.is_bullish
+            and is_doji(curr, max_body_ratio)
             and nxt.is_bullish
-            and (not require_gap or
-                 (curr.high < prev.low and nxt.low > curr.high)))
+            and (not require_gap or (curr.high < prev.low and nxt.low > curr.high)))
 
 
 def is_bearish_abandoned_baby(candles: list,
                               max_body_ratio: float = 0.05,
                               require_gap: bool = True) -> bool:
     """
+    Bearish Abandoned Baby: rare strong reversal with gaps around Doji.
     :param candles: list of at least 3 CandleStick (latest last)
     :param max_body_ratio: max body ratio for Doji
     :param require_gap: if False, skips gap validation
@@ -583,183 +590,152 @@ def is_bearish_abandoned_baby(candles: list,
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    return (prev.is_bullish and is_doji(curr, max_body_ratio)
+    return (prev.is_bullish
+            and is_doji(curr, max_body_ratio)
             and not nxt.is_bullish
-            and (not require_gap or
-                 (curr.low > prev.high and nxt.high < curr.low)))
+            and (not require_gap or (curr.low > prev.high and nxt.high < curr.low)))
 
 
 def is_three_inside_up(candles: list, close_above_open: bool = True) -> bool:
     """
+    Three Inside Up: bearish → inside bullish → bullish break.
     :param candles: list of at least 3 CandleStick
-    :param close_above_open: if True, requires nxt close > prev open (strict confirmation)
-    :return:
+    :param close_above_open: if True, requires final candle to close above first candle's open
+    :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    return (not prev.is_bullish and curr.is_bullish and prev.low <= curr.low
-            and curr.high <= prev.high and nxt.is_bullish
+    return (not prev.is_bullish
+            and curr.is_bullish
+            and prev.low <= curr.low
+            and curr.high <= prev.high
+            and nxt.is_bullish
             and (not close_above_open or nxt.close > prev.open))
 
 
 def is_three_inside_down(candles: list, close_below_open: bool = True) -> bool:
     """
+    Three Inside Down: bullish → inside bearish → bearish break.
     :param candles: list of at least 3 CandleStick
-    :param close_below_open: if True, requires nxt close < prev open (strict confirmation)
-    :return:
+    :param close_below_open: if True, requires final candle to close below first candle's open
+    :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    return (prev.is_bullish and not curr.is_bullish and prev.low <= curr.low
-            and curr.high <= prev.high and not nxt.is_bullish
+    return (prev.is_bullish
+            and not curr.is_bullish
+            and prev.low <= curr.low
+            and curr.high <= prev.high
+            and not nxt.is_bullish
             and (not close_below_open or nxt.close < prev.open))
 
 
 def is_three_outside_up(candles: list, strict_engulfing: bool = True) -> bool:
     """
+    Three Outside Up: bearish → engulfing bullish → bullish confirmation.
     :param candles: list of at least 3 CandleStick
-    :param strict_engulfing: if True, requires curr to fully engulf prev (open <= prev.close and close >= prev.open)
-    :return:
+    :param strict_engulfing: if True, uses body-based engulfing; else uses full range
+    :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    if (prev.is_bullish or not curr.is_bullish or not nxt.is_bullish
-            or nxt.close <= curr.close):
-        return False
-
-    if strict_engulfing:
-        if not (curr.open <= prev.close and curr.close >= prev.open):
-            return False
-    else:
-        if not (curr.open <= prev.open and curr.close >= prev.close):
-            return False
-
-    return True
+    return (not prev.is_bullish
+            and curr.is_bullish
+            and nxt.is_bullish
+            and nxt.close > curr.close
+            and (strict_engulfing and (curr.open <= prev.close and curr.close >= prev.open)
+                 or (not strict_engulfing and curr.open <= prev.open and curr.close >= prev.close)))
 
 
-def is_three_outside_down(candles: list,
-                          strict_engulfing: bool = True) -> bool:
+def is_three_outside_down(candles: list, strict_engulfing: bool = True) -> bool:
     """
+    Three Outside Down: bullish → engulfing bearish → bearish confirmation.
     :param candles: list of at least 3 CandleStick
-    :param strict_engulfing: if True, requires curr to fully engulf prev (open >= prev.close and close <= prev.open)
-    :return:
+    :param strict_engulfing: if True, uses body-based engulfing; else uses full range
+    :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    if (not prev.is_bullish
-        or curr.is_bullish
-        or nxt.is_bullish
-        or nxt.close >= curr.close):
-        return False
-
-    if strict_engulfing:
-        if not (curr.open >= prev.close and curr.close <= prev.open):
-            return False
-    else:
-        if not (curr.open >= prev.open and curr.close <= prev.close):
-            return False
-
-    return True
+    return (prev.is_bullish
+            and not curr.is_bullish
+            and not nxt.is_bullish
+            and nxt.close < curr.close
+            and (strict_engulfing and (curr.open >= prev.close and curr.close <= prev.open)
+                 or (not strict_engulfing and curr.open >= prev.open and curr.close <= prev.close)))
 
 
 def is_bullish_stick_sandwich(candles: list, close_tolerance: float = 0.005) -> bool:
     """
+    Bullish Stick Sandwich: support holds as price closes back to prior close.
     :param candles: list of at least 3 CandleStick (latest last)
-    :param close_tolerance: max allowed ratio difference between prev and nxt closes (relative to prev length)
+    :param close_tolerance: max allowed ratio difference between first and third closes
     :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    return (
-        not prev.is_bullish
-        and curr.is_bullish
-        and not nxt.is_bullish
-        and prev.length > 0
-        and abs(nxt.close - prev.close) <= prev.length * close_tolerance
-    )
+    return (not prev.is_bullish
+            and curr.is_bullish
+            and not nxt.is_bullish
+            and prev.length > 0
+            and abs(nxt.close - prev.close) <= prev.length * close_tolerance)
 
 
 def is_bearish_stick_sandwich(candles: list, close_tolerance: float = 0.005) -> bool:
     """
+    Bearish Stick Sandwich: resistance holds as price closes back to prior close.
     :param candles: list of at least 3 CandleStick (latest last)
-    :param close_tolerance: max allowed ratio difference between prev and nxt closes (relative to prev length)
+    :param close_tolerance: max allowed ratio difference between first and third closes
     :return: bool
     """
     if len(candles) < 3:
         return False
-
     prev, curr, nxt = candles[-3], candles[-2], candles[-1]
-
-    return (
-        prev.is_bullish
-        and not curr.is_bullish
-        and nxt.is_bullish
-        and prev.length > 0
-        and abs(nxt.close - prev.close) <= prev.length * close_tolerance
-    )
+    return (prev.is_bullish
+            and not curr.is_bullish
+            and nxt.is_bullish
+            and prev.length > 0
+            and abs(nxt.close - prev.close) <= prev.length * close_tolerance)
 
 
-def is_bullish_counterattack(
-    candles: list,
-    max_body_ratio: float = 0.05,
-    close_tolerance: float = 0.01
-) -> bool:
+def is_bullish_counterattack(candles: list,
+                             max_body_ratio: float = 0.05,
+                             close_tolerance: float = 0.01) -> bool:
     """
+    Bullish Counterattack: rejection of new lows; closes back to prior close.
     :param candles: list of at least 2 CandleStick (latest last)
-    :param max_body_ratio: max body ratio for confirmation candle (curr)
-    :param close_tolerance: max allowed ratio difference between prev and curr closes (relative to prev length)
+    :param max_body_ratio: max body ratio for confirmation candle
+    :param close_tolerance: max allowed ratio difference between first and second closes
     :return: bool
     """
     if len(candles) < 2:
         return False
-
     prev, curr = candles[-2], candles[-1]
-
-    return (
-        not prev.is_bullish
-        and curr.open < prev.close
-        and abs(curr.close - prev.close) <= prev.length * close_tolerance
-        and has_thin_body(curr, max_body_ratio)
-    )
+    return (not prev.is_bullish
+            and curr.open < prev.close
+            and abs(curr.close - prev.close) <= prev.length * close_tolerance
+            and is_thin_enough(curr, max_body_ratio))
 
 
-def is_bearish_counterattack(
-    candles: list,
-    max_body_ratio: float = 0.05,
-    close_tolerance: float = 0.01
-) -> bool:
+def is_bearish_counterattack(candles: list,
+                             max_body_ratio: float = 0.05,
+                             close_tolerance: float = 0.01) -> bool:
     """
+    Bearish Counterattack: rejection of new highs; closes back to prior close.
     :param candles: list of at least 2 CandleStick (latest last)
-    :param max_body_ratio: max body ratio for confirmation candle (curr)
-    :param close_tolerance: max allowed ratio difference between prev and curr closes (relative to prev length)
+    :param max_body_ratio: max body ratio for confirmation candle
+    :param close_tolerance: max allowed ratio difference between first and second closes
     :return: bool
     """
     if len(candles) < 2:
         return False
-
     prev, curr = candles[-2], candles[-1]
-
-    return (
-        prev.is_bullish
-        and curr.open > prev.close
-        and abs(curr.close - prev.close) <= prev.length * close_tolerance
-        and has_thin_body(curr <= max_body_ratio)
-    )
+    return (prev.is_bullish
+            and curr.open > prev.close
+            and abs(curr.close - prev.close) <= prev.length * close_tolerance
+            and is_thin_enough(curr, max_body_ratio))
