@@ -47,3 +47,12 @@ class CandleStick:
         if self.length == 0:
             return 0
         return self.body_length / self.length
+
+    @property
+    def body_low(self) -> float:
+        return self.close if self.close < self.open else self.open
+
+    @property
+    def body_high(self) -> float:
+        return self.close if self.close > self.open else self.open
+
