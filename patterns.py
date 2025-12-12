@@ -89,7 +89,7 @@ def _rel_close(a: float, b: float, rel_tol: float = 1e-4, abs_tol: float = 1e-8)
 # SINGLE-CANDLE PATTERNS
 # --------------------------
 
-def is_doji(candle: CandleStick, max_body_ratio: float = 0.05) -> bool:
+def is_doji(candle: CandleStick, max_body_ratio: float = 0.1) -> bool:
     """Detect general Doji pattern (indecision).
     :param candle: The candlestick to evaluate
     :param max_body_ratio: Maximum body-to-total-length ratio
@@ -481,3 +481,130 @@ def is_outside_bar(prev: CandleStick, curr: CandleStick) -> bool:
     if not (_valid_candle(prev) and _valid_candle(curr)):
         return False
     return body_engulf(prev, curr)
+
+def is_separating_lines_bullish(c0: CandleStick, c1: CandleStick,
+                               tolerance_ratio: float = 0.01) -> bool:
+    """Detect Bullish Separating Lines pattern.
+    :param c0: First (bearish) candle
+    :param c1: Second (bullish) candle with same open
+    :param tolerance_ratio: Open alignment tolerance as fraction of max length
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    tol = max(c0.length, c1.length, 1e-8) * tolerance_ratio
+    return (not c0.is_bullish
+            and c1.is_bullish
+            and abs(c0.open - c1.open) <= tol)
+
+def is_separating_lines_bearish(c0: CandleStick, c1: CandleStick,
+                               tolerance_ratio: float = 0.01) -> bool:
+    """Detect Bearish Separating Lines pattern.
+    :param c0: First (bullish) candle
+    :param c1: Second (bearish) candle with same open
+    :param tolerance_ratio: Open alignment tolerance as fraction of max length
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    tol = max(c0.length, c1.length, 1e-8) * tolerance_ratio
+    return (c0.is_bullish
+            and not c1.is_bullish
+            and abs(c0.open - c1.open) <= tol)
+
+
+def is_kicking_bullish(c0: CandleStick, c1: CandleStick,
+                      min_marubozu_ratio: float = 0.9) -> bool:
+    """Detect Bullish Kicking pattern.
+    :param c0: First (bearish marubozu) candle
+    :param c1: Second (bullish marubozu) candle
+    :param min_marubozu_ratio: Minimum body ratio for marubozu candles
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    return (is_bearish_marubozu(c0, min_marubozu_ratio)
+            and is_bullish_marubozu(c1, min_marubozu_ratio)
+            and gap_up(c0, c1))
+
+def is_kicking_bearish(c0: CandleStick, c1: CandleStick,
+                      min_marubozu_ratio: float = 0.9) -> bool:
+    """Detect Bearish Kicking pattern.
+    :param c0: First (bullish marubozu) candle
+    :param c1: Second (bearish marubozu) candle
+    :param min_marubozu_ratio: Minimum body ratio for marubozu candles
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    return (is_bullish_marubozu(c0, min_marubozu_ratio)
+            and is_bearish_marubozu(c1, min_marubozu_ratio)
+            and gap_down(c0, c1))
+
+def is_counterattack_bullish(c0: CandleStick, c1: CandleStick,
+                            min_body_ratio: float = 0.4) -> bool:
+    """Detect Bullish Counterattack (Meeting Lines) pattern.
+    :param c0: First (bearish) candle closing near low
+    :param c1: Second (bullish) candle opening below c0's close
+    :param min_body_ratio: Minimum body ratio for both candles
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    return (is_thick_bearish(c0, min_body_ratio)
+            and _rel_close(c0.close, c0.low, abs_tol=c0.length * 0.1)   # ← NEW
+            and is_thick_bullish(c1, min_body_ratio)
+            and c1.open < c0.close
+            and _rel_close(c0.close, c1.close, abs_tol=c0.length * 0.01))
+
+def is_counterattack_bearish(c0: CandleStick, c1: CandleStick,
+                            min_body_ratio: float = 0.4) -> bool:
+    """Detect Bearish Counterattack (Meeting Lines) pattern.
+    :param c0: First (bullish) candle closing near high
+    :param c1: Second (bearish) candle opening above c0's close
+    :param min_body_ratio: Minimum body ratio for both candles
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    return (is_thick_bullish(c0, min_body_ratio)
+            and _rel_close(c0.close, c0.high, abs_tol=c0.length * 0.1)  # ← NEW
+            and is_thick_bearish(c1, min_body_ratio)
+            and c1.open > c0.close
+            and _rel_close(c0.close, c1.close, abs_tol=c0.length * 0.01))
+
+def is_upside_gap_two_crows(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                           min_body_ratio: float = 0.4) -> bool:
+    """Detect Upside Gap Two Crows pattern.
+    :param c0: First (bullish) candle
+    :param c1: Second (bearish) gap candle
+    :param c2: Third (bearish) engulfing candle
+    :param min_body_ratio: Minimum body ratio for all candles
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bullish(c0, min_body_ratio)
+            and c1.open > c0.high  # Clear gap above c0
+            and is_thick_bearish(c1, min_body_ratio)
+            and is_thick_bearish(c2, min_body_ratio)
+            and body_engulf(c1, c2)  # c2 engulfs c1's body
+            and c2.close < c0.close)  # Closes below first bullish candle
+
+
+def is_harami_cross_bullish(c0: CandleStick, c1: CandleStick, min_body_ratio: float = 0.3) -> bool:
+    """Detect Bullish Harami Cross pattern.
+    :param c0: Previous (large bearish) candle
+    :param c1: Current (doji) candle contained within c0's body
+    :param min_body_ratio: Minimum body ratio for first candle to be considered "large"
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    return (is_thick_bearish(c0, min_body_ratio)
+            and is_doji(c1, max_body_ratio=0.1)
+            and body_contained(c1, c0))
+
+def is_harami_cross_bearish(c0: CandleStick, c1: CandleStick, min_body_ratio: float = 0.3) -> bool:
+    """Detect Bearish Harami Cross pattern.
+    :param c0: Previous (large bullish) candle
+    :param c1: Current (doji) candle contained within c0's body
+    :param min_body_ratio: Minimum body ratio for first candle to be considered "large"
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    return (is_thick_bullish(c0, min_body_ratio)
+            and is_doji(c1, max_body_ratio=0.1)
+            and body_contained(c1, c0))
