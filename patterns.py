@@ -310,11 +310,12 @@ def is_bearish_harami(c0: CandleStick, c1: CandleStick, min_body_ratio: float = 
             and body_contained(c1, c0))
 
 def is_three_white_soldiers(c0: CandleStick, c1: CandleStick, c2: CandleStick,
-                            min_body_ratio: float = 0.4) -> bool:
+                            min_body_ratio: float = 0.4, close_to_high_tol = 0.2) -> bool:
     """Detect Three White Soldiers pattern.
     :param c0: First bullish candle
     :param c1: Second bullish candle
     :param c2: Third bullish candle
+    :param close_to_high_tol: Close to high tolerance
     :param min_body_ratio: Minimum body ratio for each candle
     """
     if not all(_valid_candle(c) for c in (c0, c1, c2)):
@@ -326,12 +327,12 @@ def is_three_white_soldiers(c0: CandleStick, c1: CandleStick, c2: CandleStick,
     if not (c1.open > c0.open and c1.open < c0.close and
             c2.open > c1.open and c2.open < c1.close):
         return False
-    close_to_high_tol = 0.1
     return all(_rel_close(c.close, c.high, abs_tol=c.length * close_to_high_tol)
                for c in (c0, c1, c2))
 
 def is_three_black_crows(c0: CandleStick, c1: CandleStick, c2: CandleStick,
-                         min_body_ratio: float = 0.4) -> bool:
+                         min_body_ratio: float = 0.4,
+                         close_to_low_tol = 0.2) -> bool:
     """Detect Three Black Crows pattern.
     :param c0: First bearish candle
     :param c1: Second bearish candle
