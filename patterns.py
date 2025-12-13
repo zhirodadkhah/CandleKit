@@ -608,3 +608,332 @@ def is_harami_cross_bearish(c0: CandleStick, c1: CandleStick, min_body_ratio: fl
     return (is_thick_bullish(c0, min_body_ratio)
             and is_doji(c1, max_body_ratio=0.1)
             and body_contained(c1, c0))
+
+# --------------------------
+# THREE-CANDLE PATTERNS (Bulkowski Compliant)
+# --------------------------
+
+def is_mat_hold(c0: CandleStick, c1: CandleStick, c2: CandleStick, c3: CandleStick, c4: CandleStick,
+                min_body_ratio: float = 0.4, max_consolidation_body_ratio: float = 0.3) -> bool:
+    """Detect Mat Hold pattern (bullish continuation) - Bulkowski p. 244.
+    :param c0: Strong bullish candle
+    :param c1-c3: Three small bearish candles inside c0's range
+    :param c4: Bullish confirmation candle closing above c0 high
+    :param min_body_ratio: Minimum body ratio for strong candles
+    :param max_consolidation_body_ratio: Maximum body ratio for consolidation candles
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2, c3, c4)):
+        return False
+    return (is_thick_bullish(c0, min_body_ratio)
+            and all(not c.is_bullish and is_thin_enough(c, max_consolidation_body_ratio) for c in (c1, c2, c3))
+            and all(c.high <= c0.high and c.low >= c0.low for c in (c1, c2, c3))
+            and is_thick_bullish(c4, min_body_ratio)
+            and c4.close > c0.high)
+
+def is_three_stars_south(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                         min_body_ratio: float = 0.3) -> bool:
+    """Detect Three Stars in the South pattern (bearish continuation) - Bulkowski p. 325.
+    :param c0: Long bearish candle with long lower wick
+    :param c1: Smaller bearish candle within c0's range
+    :param c2: Small bearish candle (doji-like) closing near low
+    :param min_body_ratio: Minimum body ratio for c0
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bearish(c0, min_body_ratio)
+            and c0.bottom_wick > c0.body_length
+            and not c1.is_bullish
+            and c1.high < c0.high and c1.low > c0.low
+            and not c2.is_bullish
+            and is_thin_enough(c2, max_ratio=0.2)
+            and _rel_close(c2.close, c2.low, abs_tol=c2.length * 0.1))
+
+def is_advance_block(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                     min_body_ratio: float = 0.4) -> bool:
+    """Detect Advance Block pattern (bearish reversal) - Bulkowski p. 2.
+    :param c0: Bullish candle
+    :param c1: Bullish candle with long upper wick
+    :param c2: Bullish candle with even longer upper wick
+    :param min_body_ratio: Minimum body ratio for c0
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bullish(c0, min_body_ratio)
+            and c1.is_bullish and c2.is_bullish
+            and c1.top_wick > c1.body_length
+            and c2.top_wick > c2.body_length
+            and c2.top_wick > c1.top_wick
+            and _rel_close(c2.close, c2.low, abs_tol=c2.length * 0.1))
+
+def is_deliberation(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                    min_body_ratio: float = 0.4) -> bool:
+    """Detect Deliberation pattern (bearish reversal) - Bulkowski p. 72.
+    :param c0: Strong bullish candle
+    :param c1: Strong bullish candle
+    :param c2: Small candle (doji/spinning top) gapping up
+    :param min_body_ratio: Minimum body ratio for c0, c1
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bullish(c0, min_body_ratio)
+            and is_thick_bullish(c1, min_body_ratio)
+            and (is_doji(c2, max_body_ratio=0.2) or is_spinning_top(c2))
+            and gap_up(c1, c2))
+
+def is_three_inside_up(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                       min_body_ratio: float = 0.4) -> bool:
+    """Detect Three Inside Up pattern (bullish reversal) - Bulkowski p. 306.
+    :param c0: Bearish candle
+    :param c1: Bullish candle contained within c0
+    :param c2: Bullish confirmation candle closing above c0 high
+    :param min_body_ratio: Minimum body ratio for c0, c2
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bearish(c0, min_body_ratio)
+            and c1.is_bullish
+            and body_contained(c1, c0)
+            and is_thick_bullish(c2, min_body_ratio)
+            and c2.close > c0.high)
+
+def is_three_outside_up(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                        min_body_ratio: float = 0.4) -> bool:
+    """Detect Three Outside Up pattern (bullish reversal) - Bulkowski p. 309.
+    :param c0: Bearish candle
+    :param c1: Bullish engulfing candle
+    :param c2: Bullish confirmation candle
+    :param min_body_ratio: Minimum body ratio for strong candles
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bearish(c0, min_body_ratio)
+            and is_bullish_engulfing(c0, c1)
+            and is_thick_bullish(c2, min_body_ratio)
+            and c2.close > c1.close)
+
+def is_rising_three_methods(c0: CandleStick, c1: CandleStick, c2: CandleStick, c3: CandleStick, c4: CandleStick,
+                            min_body_ratio: float = 0.5, max_consolidation_body_ratio: float = 0.3) -> bool:
+    """Detect Rising Three Methods pattern (bullish continuation) - Bulkowski p. 280.
+    :param c0: Long bullish candle
+    :param c1-c3: Three small bearish candles inside c0's range
+    :param c4: Long bullish candle closing above c0 high
+    :param min_body_ratio: Minimum body ratio for c0, c4
+    :param max_consolidation_body_ratio: Maximum body ratio for corrective candles
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2, c3, c4)):
+        return False
+    return (is_thick_bullish(c0, min_body_ratio)
+            and all(not c.is_bullish and is_thin_enough(c, max_consolidation_body_ratio) for c in (c1, c2, c3))
+            and all(c.high <= c0.high and c.low >= c0.low for c in (c1, c2, c3))
+            and is_thick_bullish(c4, min_body_ratio)
+            and c4.close > c0.high)
+
+def is_falling_three_methods(c0: CandleStick, c1: CandleStick, c2: CandleStick, c3: CandleStick, c4: CandleStick,
+                             min_body_ratio: float = 0.5, max_consolidation_body_ratio: float = 0.3) -> bool:
+    """Detect Falling Three Methods pattern (bearish continuation) - Bulkowski p. 104.
+    :param c0: Long bearish candle
+    :param c1-c3: Three small bullish candles inside c0's range
+    :param c4: Long bearish candle closing below c0 low
+    :param min_body_ratio: Minimum body ratio for c0, c4
+    :param max_consolidation_body_ratio: Maximum body ratio for corrective candles
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2, c3, c4)):
+        return False
+    return (is_thick_bearish(c0, min_body_ratio)
+            and all(c.is_bullish and is_thin_enough(c, max_consolidation_body_ratio) for c in (c1, c2, c3))
+            and all(c.high <= c0.high and c.low >= c0.low for c in (c1, c2, c3))
+            and is_thick_bearish(c4, min_body_ratio)
+            and c4.close < c0.low)
+
+def is_upside_gap_three_methods(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                                min_body_ratio: float = 0.4) -> bool:
+    """Detect Upside Gap Three Methods pattern (bullish continuation) - Bulkowski p. 331.
+    :param c0: Bullish candle
+    :param c1: Bullish candle with gap up
+    :param c2: Bearish candle closing inside the gap
+    :param min_body_ratio: Minimum body ratio for c0, c1
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bullish(c0, min_body_ratio)
+            and is_thick_bullish(c1, min_body_ratio)
+            and gap_up(c0, c1)
+            and not c2.is_bullish
+            and c2.open > c0.close
+            and c2.open < c1.open
+            and c2.close > c0.close
+            and c2.close < c1.open)
+
+def is_downside_gap_three_methods(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                                  min_body_ratio: float = 0.4) -> bool:
+    """Detect Downside Gap Three Methods pattern (bearish continuation) - Bulkowski p. 77.
+    :param c0: Bearish candle
+    :param c1: Bearish candle with gap down
+    :param c2: Bullish candle closing inside the gap
+    :param min_body_ratio: Minimum body ratio for c0, c1
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bearish(c0, min_body_ratio)
+            and is_thick_bearish(c1, min_body_ratio)
+            and gap_down(c0, c1)
+            and c2.is_bullish
+            and c2.open < c0.close
+            and c2.open > c1.open
+            and c2.close < c0.close
+            and c2.close > c1.open)
+
+def is_side_by_side_white_lines(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                                tolerance_ratio: float = 0.02) -> bool:
+    """Detect Side-by-Side White Lines pattern (bullish continuation)
+    :param c0: Any candle (often bearish)
+    :param c1: Bullish candle with gap up
+    :param c2: Bullish candle with similar open/close as c1
+    :param tolerance_ratio: Allowed deviation between c1/c2 open/close
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    tol = max(c1.length, c2.length, 1e-8) * tolerance_ratio
+    return (c1.is_bullish and c2.is_bullish
+            and gap_up(c0, c1)
+            and abs(c1.open - c2.open) <= tol
+            and abs(c1.close - c2.close) <= tol)
+
+def is_upside_tasuki_gap(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                         min_body_ratio: float = 0.4) -> bool:
+    """Detect Upside Tasuki Gap pattern (bullish continuation)
+    :param c0: Bullish candle
+    :param c1: Bullish candle with gap up
+    :param c2: Bearish candle opening in gap and closing in c0's body
+    :param min_body_ratio: Minimum body ratio for c0, c1
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bullish(c0, min_body_ratio)
+            and is_thick_bullish(c1, min_body_ratio)
+            and gap_up(c0, c1)
+            and not c2.is_bullish
+            and c2.open > c0.close
+            and c2.open < c1.open
+            and c2.close > c0.body_low
+            and c2.close < c1.open)
+
+def is_bearish_tasuki_gap(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                          min_body_ratio: float = 0.4) -> bool:
+    """Detect Bearish Tasuki Gap pattern (bearish continuation)
+    :param c0: Bearish candle
+    :param c1: Bearish candle with gap down
+    :param c2: Bullish candle opening in gap and closing in c0's body
+    :param min_body_ratio: Minimum body ratio for c0, c1
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bearish(c0, min_body_ratio)
+            and is_thick_bearish(c1, min_body_ratio)
+            and gap_down(c0, c1)
+            and c2.is_bullish
+            and c2.open < c0.close
+            and c2.open > c1.open
+            and c2.close < c0.body_high
+            and c2.close > c1.open)
+
+def is_three_line_strike_bullish(c0: CandleStick, c1: CandleStick, c2: CandleStick, c3: CandleStick,
+                                 min_body_ratio: float = 0.4) -> bool:
+    """Detect Bullish Three-Line Strike pattern (bullish reversal)
+    :param c0-c2: Three consecutive bearish candles
+    :param c3: Bullish candle engulfing all three
+    :param min_body_ratio: Minimum body ratio for all candles
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2, c3)):
+        return False
+    return (all(is_thick_bearish(c, min_body_ratio) for c in (c0, c1, c2))
+            and c0.close > c1.close > c2.close
+            and c3.is_bullish
+            and c3.body_low < c2.body_low and c3.body_high > c0.body_high)
+
+def is_three_line_strike_bearish(c0: CandleStick, c1: CandleStick, c2: CandleStick, c3: CandleStick,
+                                 min_body_ratio: float = 0.4) -> bool:
+    """Detect Bearish Three-Line Strike pattern (bearish reversal)
+    :param c0-c2: Three consecutive bullish candles
+    :param c3: Bearish candle engulfing all three
+    :param min_body_ratio: Minimum body ratio for all candles
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2, c3)):
+        return False
+    return (all(c.is_bullish and is_thick_bullish(c, min_body_ratio) for c in (c0, c1, c2))
+            and c0.close < c1.close < c2.close
+            and not c3.is_bullish
+            and c3.body_low < c0.body_low and c3.body_high > c2.body_high)
+
+def is_two_crows(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                 min_body_ratio: float = 0.4) -> bool:
+    """Detect Two Crows pattern (bearish reversal)
+    :param c0: Long bullish candle
+    :param c1: Bearish candle gapping above c0
+    :param c2: Bearish candle engulfing c1
+    :param min_body_ratio: Minimum body ratio for strong candles
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bullish(c0, min_body_ratio)
+            and not c1.is_bullish
+            and c1.open > c0.high
+            and not c2.is_bullish
+            and body_engulf(c1, c2)
+            and c2.close < c0.close)
+
+
+# --------------------------
+# FOUR-CANDLE PATTERNS (Bulkowski Compliant)
+# --------------------------
+
+def is_concealing_baby_swallow(c0: CandleStick, c1: CandleStick, c2: CandleStick, c3: CandleStick,
+                               min_body_ratio: float = 0.6) -> bool:
+    """Detect Concealing Baby Swallow pattern (bearish continuation)
+    :param c0: First bearish candle
+    :param c1: Second bearish candle with gap down
+    :param c2: Third bearish candle with upper shadow
+    :param c3: Fourth bearish candle engulfing c2's upper shadow
+    :param min_body_ratio: Minimum body ratio for strong candles
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2, c3)):
+        return False
+    return (all(not c.is_bullish for c in (c0, c1, c2, c3))
+            and is_thick_bearish(c0, min_body_ratio)
+            and is_thick_bearish(c1, min_body_ratio)
+            and gap_down(c0, c1)
+            and c2.top_wick > c2.length * 0.2
+            and c3.high > c2.high
+            and c3.close < c2.close)
+
+def is_three_river_bottom(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                          min_body_ratio: float = 0.4) -> bool:
+    """Detect Three River Bottom pattern (bullish reversal)
+    :param c0: Long bearish candle
+    :param c1: Hammer candle
+    :param c2: Doji or spinning top contained in c1
+    :param min_body_ratio: Minimum body ratio for c0
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bearish(c0, min_body_ratio)
+            and is_hammer(c1, max_body_ratio=0.3)
+            and (is_doji(c2, max_body_ratio=0.2) or is_spinning_top(c2))
+            and body_contained(c2, c1))
+
+def is_unique_three_river_bottom(c0: CandleStick, c1: CandleStick, c2: CandleStick,
+                                 min_body_ratio: float = 0.4) -> bool:
+    """Detect Unique Three River Bottom pattern (bullish reversal)
+    :param c0: Bearish candle with long lower shadow
+    :param c1: Small bullish candle near c0 low
+    :param c2: Bullish candle closing above c0 midpoint
+    :param min_body_ratio: Minimum body ratio for c0
+    """
+    if not all(_valid_candle(c) for c in (c0, c1, c2)):
+        return False
+    return (is_thick_bearish(c0, min_body_ratio)
+            and c0.bottom_wick > c0.body_length
+            and c1.is_bullish
+            and c1.close > c0.close
+            and c2.is_bullish
+            and c2.close > (c0.open + c0.close) / 2)
