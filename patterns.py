@@ -44,19 +44,21 @@ def is_thin_bullish(candle: CandleStick, max_ratio: float) -> bool:
     """
     return candle.is_bullish and candle.body_ratio <= max_ratio
 
-def gap_down(prev: CandleStick, curr: CandleStick) -> bool:
+def gap_down(prev: CandleStick, curr: CandleStick, window = False) -> bool:
     """Check if current candle gaps down (open < previous close).
     :param prev: Previous candle
     :param curr: Current candle
+    :param window:
     """
-    return curr.open < prev.close
+    return curr.open < prev.close if not window else curr.high < prev.low
 
-def gap_up(prev: CandleStick, curr: CandleStick) -> bool:
+def gap_up(prev: CandleStick, curr: CandleStick, window = False) -> bool:
     """Check if current candle gaps up (open > previous close).
     :param prev: Previous candle
     :param curr: Current candle
+    :param window:
     """
-    return curr.open > prev.close
+    return curr.open > prev.close if not window else curr.low > prev.high
 
 def body_engulf(prev: CandleStick, curr: CandleStick) -> bool:
     """Check if current candle's body engulfs previous candle's body.
