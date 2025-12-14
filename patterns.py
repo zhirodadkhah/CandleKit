@@ -133,54 +133,52 @@ def is_shooting_star(candle: CandleStick,
             and candle.top_wick >= candle.body_length * min_upper_wick_to_body
             and candle.bottom_wick <= max_lower_wick_ratio * candle.length)
 
-def is_bullish_belt_hold(candle: CandleStick, min_body_ratio: float = 0.95) -> bool:
+def is_bullish_belt_hold(candle: CandleStick, min_body_ratio: float = 0.95, max_wick_ratio: float = 0.05) -> bool:
     """Detect Bullish Belt Hold.
     :param candle: The candlestick to evaluate
     :param min_body_ratio: Minimum body-to-total-length ratio
+    :param max_wick_ratio: Max allowed lower/upper wick as fraction of total length (Nison: "no lower shadow")
     :ref: Nison p. 32
     """
     if not _valid_candle(candle) or not candle.is_bullish:
         return False
-    # No lower shadow (open = low)
-    # Close near high
     return (is_thick_enough(candle, min_body_ratio)
-            and _rel_close(candle.open, candle.low, abs_tol=1e-5)
-            and _rel_close(candle.close, candle.high, abs_tol=1e-5))
+            and candle.bottom_wick <= max_wick_ratio * candle.length
+            and candle.top_wick <= max_wick_ratio * candle.length)
 
-def is_bearish_belt_hold(candle: CandleStick, min_body_ratio: float = 0.95) -> bool:
+def is_bearish_belt_hold(candle: CandleStick, min_body_ratio: float = 0.95, max_wick_ratio: float = 0.05) -> bool:
     """Detect Bearish Belt Hold.
     :param candle: The candlestick to evaluate
     :param min_body_ratio: Minimum body-to-total-length ratio
+    :param max_wick_ratio: Max allowed lower/upper wick as fraction of total length
     :ref: Nison p. 32
     """
     if not _valid_candle(candle) or candle.is_bullish:
         return False
-    return (is_thick_enough(candle, min_body_ratio)
-            and _rel_close(candle.open, candle.high, abs_tol=1e-5)
-            and _rel_close(candle.close, candle.low, abs_tol=1e-5))
-
-def is_bullish_marubozu(candle: CandleStick, min_body_ratio: float = 0.95) -> bool:
-    """Detect Bullish Marubozu.
-    :param candle: The candlestick to evaluate
-    :param min_body_ratio: Minimum body-to-total-length ratio
-    """
-    if not _valid_candle(candle) or not candle.is_bullish:
-        return False
-    max_wick_ratio = 1.0 - min_body_ratio
     return (is_thick_enough(candle, min_body_ratio)
             and candle.top_wick <= max_wick_ratio * candle.length
             and candle.bottom_wick <= max_wick_ratio * candle.length)
 
-def is_bearish_marubozu(candle: CandleStick, min_body_ratio: float = 0.95) -> bool:
-    """Detect Bearish Marubozu.
+def is_bullish_marubozu(candle: CandleStick, max_wick_ratio: float = 0.01) -> bool:
+    """Detect Bullish Marubozu (no shadows per Nison).
     :param candle: The candlestick to evaluate
-    :param min_body_ratio: Minimum body-to-total-length ratio
+    :param max_wick_ratio: Max allowed wick as fraction of total length (Nison: zero shadows)
+    :ref: Nison p. 24
+    """
+    if not _valid_candle(candle) or not candle.is_bullish:
+        return False
+    return (candle.bottom_wick <= max_wick_ratio * candle.length
+            and candle.top_wick <= max_wick_ratio * candle.length)
+
+def is_bearish_marubozu(candle: CandleStick, max_wick_ratio: float = 0.01) -> bool:
+    """Detect Bearish Marubozu (no shadows per Nison).
+    :param candle: The candlestick to evaluate
+    :param max_wick_ratio: Max allowed wick as fraction of total length (Nison: zero shadows)
+    :ref: Nison p. 24
     """
     if not _valid_candle(candle) or candle.is_bullish:
         return False
-    max_wick_ratio = 1.0 - min_body_ratio
-    return (is_thick_enough(candle, min_body_ratio)
-            and candle.top_wick <= max_wick_ratio * candle.length
+    return (candle.top_wick <= max_wick_ratio * candle.length
             and candle.bottom_wick <= max_wick_ratio * candle.length)
 
 # --------------------------
@@ -278,7 +276,7 @@ def is_kicking_bullish(c0: CandleStick, c1: CandleStick, min_marubozu_ratio: flo
         return False
     return (is_bearish_marubozu(c0, min_marubozu_ratio)
             and is_bullish_marubozu(c1, min_marubozu_ratio)
-            and gap_up(c0, c1))
+            and gap_up(c0, c1, window=True))
 
 def is_kicking_bearish(c0: CandleStick, c1: CandleStick, min_marubozu_ratio: float = 0.9) -> bool:
     """Detect Bearish Kicking pattern.
@@ -291,4 +289,4 @@ def is_kicking_bearish(c0: CandleStick, c1: CandleStick, min_marubozu_ratio: flo
         return False
     return (is_bullish_marubozu(c0, min_marubozu_ratio)
             and is_bearish_marubozu(c1, min_marubozu_ratio)
-            and gap_down(c0, c1))
+            and gap_down(c0, c1, window=True))
