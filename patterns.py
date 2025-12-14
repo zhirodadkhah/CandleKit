@@ -156,3 +156,137 @@ def is_bearish_belt_hold(candle: CandleStick, min_body_ratio: float = 0.95) -> b
     return (is_thick_enough(candle, min_body_ratio)
             and _rel_close(candle.open, candle.high, abs_tol=1e-5)
             and _rel_close(candle.close, candle.low, abs_tol=1e-5))
+
+def is_bullish_marubozu(candle: CandleStick, min_body_ratio: float = 0.95) -> bool:
+    """Detect Bullish Marubozu.
+    :param candle: The candlestick to evaluate
+    :param min_body_ratio: Minimum body-to-total-length ratio
+    """
+    if not _valid_candle(candle) or not candle.is_bullish:
+        return False
+    max_wick_ratio = 1.0 - min_body_ratio
+    return (is_thick_enough(candle, min_body_ratio)
+            and candle.top_wick <= max_wick_ratio * candle.length
+            and candle.bottom_wick <= max_wick_ratio * candle.length)
+
+def is_bearish_marubozu(candle: CandleStick, min_body_ratio: float = 0.95) -> bool:
+    """Detect Bearish Marubozu.
+    :param candle: The candlestick to evaluate
+    :param min_body_ratio: Minimum body-to-total-length ratio
+    """
+    if not _valid_candle(candle) or candle.is_bullish:
+        return False
+    max_wick_ratio = 1.0 - min_body_ratio
+    return (is_thick_enough(candle, min_body_ratio)
+            and candle.top_wick <= max_wick_ratio * candle.length
+            and candle.bottom_wick <= max_wick_ratio * candle.length)
+
+# --------------------------
+# TWO-CANDLE PATTERNS (Nison - Japanese Candlestick Charting Techniques, 2nd Ed.)
+# --------------------------
+
+def is_bullish_engulfing(c0: CandleStick, c1: CandleStick) -> bool:
+    """Detect Bullish Engulfing pattern.
+    :param c0: First (bearish) candle
+    :param c1: Second (bullish) candle whose body engulfs c0's body
+    :ref: Nison p. 45
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    return (not c0.is_bullish
+            and c1.is_bullish
+            and body_engulf(c0, c1))
+
+def is_bearish_engulfing(c0: CandleStick, c1: CandleStick) -> bool:
+    """Detect Bearish Engulfing pattern.
+    :param c0: First (bullish) candle
+    :param c1: Second (bearish) candle whose body engulfs c0's body
+    :ref: Nison p. 45
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    return (c0.is_bullish
+            and not c1.is_bullish
+            and body_engulf(c0, c1))
+
+def is_piercing_line(c0: CandleStick, c1: CandleStick) -> bool:
+    """Detect Piercing Line pattern.
+    :param c0: First long bearish candle
+    :param c1: Second bullish candle that opens below c0's low and closes above c0's midpoint
+    :ref: Nison p. 48
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    midpoint = (c0.open + c0.close) / 2
+    return (not c0.is_bullish
+            and c1.is_bullish
+            and c1.open < c0.low
+            and c1.close > midpoint
+            and c1.close <= c0.open)
+
+def is_dark_cloud_cover(c0: CandleStick, c1: CandleStick) -> bool:
+    """Detect Dark Cloud Cover pattern.
+    :param c0: First long bullish candle
+    :param c1: Second bearish candle that opens above c0's high and closes below c0's midpoint
+    :ref: Nison p. 49
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    midpoint = (c0.open + c0.close) / 2
+    return (c0.is_bullish
+            and not c1.is_bullish
+            and c1.open > c0.high
+            and c1.close < midpoint
+            and c1.close >= c0.open)
+
+def is_harami_cross_bullish(c0: CandleStick, c1: CandleStick, min_body_ratio: float = 0.3) -> bool:
+    """Detect Bullish Harami Cross pattern.
+    :param c0: First large bearish candle
+    :param c1: Second doji candle contained within c0's body
+    :param min_body_ratio: Minimum body ratio for c0 to be considered "large"
+    :ref: Nison p. 52
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    return (is_thick_bearish(c0, min_body_ratio)
+            and is_doji(c1, max_body_ratio=0.1)
+            and body_contained(c1, c0))
+
+def is_harami_cross_bearish(c0: CandleStick, c1: CandleStick, min_body_ratio: float = 0.3) -> bool:
+    """Detect Bearish Harami Cross pattern.
+    :param c0: First large bullish candle
+    :param c1: Second doji candle contained within c0's body
+    :param min_body_ratio: Minimum body ratio for c0 to be considered "large"
+    :ref: Nison p. 52
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    return (is_thick_bullish(c0, min_body_ratio)
+            and is_doji(c1, max_body_ratio=0.1)
+            and body_contained(c1, c0))
+
+def is_kicking_bullish(c0: CandleStick, c1: CandleStick, min_marubozu_ratio: float = 0.9) -> bool:
+    """Detect Bullish Kicking pattern.
+    :param c0: First bearish marubozu
+    :param c1: Second bullish marubozu with upward gap from c0
+    :param min_marubozu_ratio: Minimum body ratio for marubozu candles
+    :ref: Nison p. 170
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    return (is_bearish_marubozu(c0, min_marubozu_ratio)
+            and is_bullish_marubozu(c1, min_marubozu_ratio)
+            and gap_up(c0, c1))
+
+def is_kicking_bearish(c0: CandleStick, c1: CandleStick, min_marubozu_ratio: float = 0.9) -> bool:
+    """Detect Bearish Kicking pattern.
+    :param c0: First bullish marubozu
+    :param c1: Second bearish marubozu with downward gap from c0
+    :param min_marubozu_ratio: Minimum body ratio for marubozu candles
+    :ref: Nison p. 170
+    """
+    if not (_valid_candle(c0) and _valid_candle(c1)):
+        return False
+    return (is_bullish_marubozu(c0, min_marubozu_ratio)
+            and is_bearish_marubozu(c1, min_marubozu_ratio)
+            and gap_down(c0, c1))
