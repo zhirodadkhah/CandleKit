@@ -460,11 +460,10 @@ def is_falling_three_methods(candles: list[CandleStick], min_body_ratio: float =
             and c4.close < c0.close
             and c4.low < c0.low)
 
-def is_mat_hold(candles: list[CandleStick], min_body_ratio: float = 0.6, max_pullback_ratio: float = 0.5) -> bool:
+def is_mat_hold(candles: list[CandleStick], min_body_ratio: float = 0.6) -> bool:
     """Detect Mat Hold (bullish continuation over 5 candles).
     :param candles: List of 5 CandleStick objects [c0..c4]
     :param min_body_ratio: Minimum body ratio for c0 and c4
-    :param max_pullback_ratio: Max depth of pullback as fraction of c0's body
     :ref: Nison p. 68
     """
     if len(candles) != 5 or not all(_valid_candle(c) for c in candles):
