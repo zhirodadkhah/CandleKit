@@ -136,6 +136,7 @@ def scan_symbol_df(
     Returns:
         pd.DataFrame with detected patterns, empty if none found.
     """
+
     symbol, results = scan_symbol(symbol, df, patterns)
 
     if not results:
@@ -146,17 +147,11 @@ def scan_symbol_df(
     for idx, pattern_enum_name, signal_type in results:
         pattern_member = CandlePatterns[pattern_enum_name]
         record = {
-            'symbol': symbol,
             'index': idx,
             'pattern_name': pattern_member.pattern_name,
             'signal_type': signal_type,
             'candles': pattern_member.candles
         }
-        # Add date if available
-        if 'date' in df.columns:
-            record['date'] = df['date'].iloc[idx]
-        else:
-            record['date'] = None
         records.append(record)
 
     return pd.DataFrame(records)
