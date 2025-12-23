@@ -18,10 +18,10 @@ class CandleStick:
         :raises KeyError: If required OHLC columns are missing
         """
         row = df.iloc[index]
-        self.open = float(row['Open'])
-        self.high = float(row['High'])
-        self.low = float(row['Low'])
-        self.close = float(row['Close'])
+        self.open = float(row['open'])
+        self.high = float(row['high'])
+        self.low = float(row['low'])
+        self.close = float(row['close'])
 
     @property
     def top_wick(self) -> float:

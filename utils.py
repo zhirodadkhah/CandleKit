@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Callable
 from .patterns import *
+import pandas as pd
 
 
 from enum import Enum
@@ -114,3 +115,48 @@ def scan_symbol(
             if detect_pattern_at_index(pat, df, i):
                 results.append((i, pat.name, pat.signal_type))
     return symbol, results
+
+
+def scan_symbol_df(
+    symbol: str,
+    df,
+    patterns: list[CandlePatterns] = None
+) -> pd.DataFrame:
+    """
+    Scan for candlestick patterns and return results as a pandas DataFrame.
+
+    Columns:
+        - 'symbol': ticker symbol
+        - 'index': row index in original df where pattern ends
+        - 'date': date of the pattern (if 'date' column exists in df)
+        - 'pattern_name': human-readable name (e.g., 'Hammer')
+        - 'signal_type': 'bullish', 'bearish', or 'neutral'
+        - 'candles': number of candles in the pattern
+
+    Returns:
+        pd.DataFrame with detected patterns, empty if none found.
+    """
+    symbol, results = scan_symbol(symbol, df, patterns)
+
+    if not results:
+        return pd.DataFrame(columns=['symbol', 'index', 'date', 'pattern_name', 'signal_type', 'candles'])
+
+    # Build records
+    records = []
+    for idx, pattern_enum_name, signal_type in results:
+        pattern_member = CandlePatterns[pattern_enum_name]
+        record = {
+            'symbol': symbol,
+            'index': idx,
+            'pattern_name': pattern_member.pattern_name,
+            'signal_type': signal_type,
+            'candles': pattern_member.candles
+        }
+        # Add date if available
+        if 'date' in df.columns:
+            record['date'] = df['date'].iloc[idx]
+        else:
+            record['date'] = None
+        records.append(record)
+
+    return pd.DataFrame(records)
