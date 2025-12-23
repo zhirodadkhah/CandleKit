@@ -86,21 +86,17 @@ def detect_pattern_at_index(
 
 
 def scan_symbol(
-    symbol: str,
     df,
     patterns: list[CandlePatterns] = None
-) -> tuple[str, list[tuple[int, str, str]]]:
+) -> list[tuple[int, str, str]]:
     """
     Scan an entire price series for all occurrences of specified candlestick patterns.
 
-    :param symbol: A string identifier for the financial instrument (e.g., 'AAPL', 'BTC/USD').
     :param df: A pandas DataFrame with columns 'Open', 'High', 'Low', 'Close'.
                Must have at least one row.
     :param patterns: Optional list of `CandleStickPatterns` to scan for.
                      If `None`, all defined patterns are used (default behavior).
-    :return: A tuple containing:
-             - The `symbol` (str),
-             - A list of detected patterns, where each item is a tuple:
+    :return: A list of detected patterns, where each item is a tuple:
                `(index: int, pattern_name: str, signal_type: str)`.
     :note: This function uses default parameter values for pattern-specific thresholds
            (as defined in each detection function). To customize thresholds,
@@ -114,11 +110,10 @@ def scan_symbol(
         for pat in patterns:
             if detect_pattern_at_index(pat, df, i):
                 results.append((i, pat.name, pat.signal_type))
-    return symbol, results
+    return results
 
 
 def scan_symbol_df(
-    symbol: str,
     df,
     patterns: list[CandlePatterns] = None
 ) -> pd.DataFrame:
@@ -137,10 +132,10 @@ def scan_symbol_df(
         pd.DataFrame with detected patterns, empty if none found.
     """
 
-    symbol, results = scan_symbol(symbol, df, patterns)
+    results = scan_symbol(df, patterns)
 
     if not results:
-        return pd.DataFrame(columns=['symbol', 'index', 'date', 'pattern_name', 'signal_type', 'candles'])
+        return pd.DataFrame(columns=['index', 'pattern_name', 'signal_type', 'candles'])
 
     # Build records
     records = []
