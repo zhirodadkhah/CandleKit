@@ -3,47 +3,51 @@ from typing import Callable
 from .patterns import *
 
 
+from enum import Enum
+from typing import Callable
+
 class CandlePatterns(Enum):
-    # Format: (candles: int, func: Callable, signal_type: str)
+    # Format: (candles: int, func: Callable, signal_type: str, pattern_name: str)
 
     # --- SINGLE-CANDLE PATTERNS ---
-    Doji = (1, is_doji, "neutral")
-    Hammer = (1, is_hammer, "bullish")
-    ShootingStar = (1, is_shooting_star, "bearish")
-    BullishBeltHold = (1, is_bullish_belt_hold, "bullish")
-    BearishBeltHold = (1, is_bearish_belt_hold, "bearish")
-    BullishMarubozu = (1, is_bullish_marubozu, "bullish")
-    BearishMarubozu = (1, is_bearish_marubozu, "bearish")
+    Doji = (1, is_doji, "neutral", "Doji")
+    Hammer = (1, is_hammer, "bullish", "Hammer")
+    ShootingStar = (1, is_shooting_star, "bearish", "Shooting Star")
+    BullishBeltHold = (1, is_bullish_belt_hold, "bullish", "Bullish Belt Hold")
+    BearishBeltHold = (1, is_bearish_belt_hold, "bearish", "Bearish Belt Hold")
+    BullishMarubozu = (1, is_bullish_marubozu, "bullish", "Bullish Marubozu")
+    BearishMarubozu = (1, is_bearish_marubozu, "bearish", "Bearish Marubozu")
 
     # --- TWO-CANDLE PATTERNS ---
-    BullishEngulfing = (2, is_bullish_engulfing, "bullish")
-    BearishEngulfing = (2, is_bearish_engulfing, "bearish")
-    PiercingLine = (2, is_piercing_line, "bullish")
-    DarkCloudCover = (2, is_dark_cloud_cover, "bearish")
-    HaramiCrossBullish = (2, is_harami_cross_bullish, "bullish")
-    HaramiCrossBearish = (2, is_harami_cross_bearish, "bearish")
-    KickingBullish = (2, is_kicking_bullish, "bullish")
-    KickingBearish = (2, is_kicking_bearish, "bearish")
+    BullishEngulfing = (2, is_bullish_engulfing, "bullish", "Bullish Engulfing")
+    BearishEngulfing = (2, is_bearish_engulfing, "bearish", "Bearish Engulfing")
+    PiercingLine = (2, is_piercing_line, "bullish", "Piercing Line")
+    DarkCloudCover = (2, is_dark_cloud_cover, "bearish", "Dark Cloud Cover")
+    HaramiCrossBullish = (2, is_harami_cross_bullish, "bullish", "Bullish Harami Cross")
+    HaramiCrossBearish = (2, is_harami_cross_bearish, "bearish", "Bearish Harami Cross")
+    KickingBullish = (2, is_kicking_bullish, "bullish", "Bullish Kicking")
+    KickingBearish = (2, is_kicking_bearish, "bearish", "Bearish Kicking")
 
     # --- THREE-CANDLE PATTERNS ---
-    MorningDojiStar = (3, is_morning_doji_star, "bullish")
-    EveningDojiStar = (3, is_evening_doji_star, "bearish")
-    MorningStar = (3, is_morning_star, "bullish")
-    EveningStar = (3, is_evening_star, "bearish")
-    ThreeWhiteSoldiers = (3, is_three_white_soldiers, "bullish")
-    ThreeBlackCrows = (3, is_three_black_crows, "bearish")
-    ThreeInsideUp = (3, is_three_inside_up, "bullish")
-    ThreeOutsideUp = (3, is_three_outside_up, "bullish")
+    MorningDojiStar = (3, is_morning_doji_star, "bullish", "Morning Doji Star")
+    EveningDojiStar = (3, is_evening_doji_star, "bearish", "Evening Doji Star")
+    MorningStar = (3, is_morning_star, "bullish", "Morning Star")
+    EveningStar = (3, is_evening_star, "bearish", "Evening Star")
+    ThreeWhiteSoldiers = (3, is_three_white_soldiers, "bullish", "Three White Soldiers")
+    ThreeBlackCrows = (3, is_three_black_crows, "bearish", "Three Black Crows")
+    ThreeInsideUp = (3, is_three_inside_up, "bullish", "Three Inside Up")
+    ThreeOutsideUp = (3, is_three_outside_up, "bullish", "Three Outside Up")
 
     # --- FIVE-CANDLE PATTERNS ---
-    RisingThreeMethods = (5, is_rising_three_methods, "bullish")
-    FallingThreeMethods = (5, is_falling_three_methods, "bearish")
-    MatHold = (5, is_mat_hold, "bullish")
+    RisingThreeMethods = (5, is_rising_three_methods, "bullish", "Rising Three Methods")
+    FallingThreeMethods = (5, is_falling_three_methods, "bearish", "Falling Three Methods")
+    MatHold = (5, is_mat_hold, "bullish", "Mat Hold")
 
-    def __init__(self, candles: int, func: Callable, signal_type: str):
+    def __init__(self, candles: int, func: Callable, signal_type: str, pattern_name: str):
         self.candles = candles
         self.func = func
         self.signal_type = signal_type
+        self.pattern_name = pattern_name  # <-- NEW FIELD
 
 
 
