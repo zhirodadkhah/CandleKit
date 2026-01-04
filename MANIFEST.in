@@ -1,0 +1,46 @@
+# MANIFEST.in
+# Include these files in the source distribution
+
+# License and documentation
+include LICENSE
+include README.md
+include requirements.txt
+include pyproject.toml
+include setup.py
+
+# Include all Python source files
+recursive-include src *.py
+
+# Include example files
+recursive-include src/candlekit/examples *.py
+
+# Include test files
+recursive-include src/candlekit/tests *.py
+
+# Exclude cache directories
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *$py.class
+
+# Exclude development files
+global-exclude .git
+global-exclude .github
+global-exclude .gitignore
+global-exclude .pre-commit-config.yaml
+global-exclude .editorconfig
+
+# Exclude build artifacts
+global-exclude build
+global-exclude dist
+global-exclude *.egg-info
+global-exclude .eggs
+global-exclude .pytest_cache
+global-exclude .coverage
+global-exclude htmlcov
+global-exclude .tox
+
+# Exclude IDE files
+global-exclude .idea
+global-exclude *.iml
+global-exclude .vscode
+global-exclude .vs
