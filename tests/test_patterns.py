@@ -1,8 +1,8 @@
 
 import pytest
 import pandas as pd
-from candlestick.entity import CandleStick
-from candlestick.patterns import *
+from candlekit.entity import CandleStick
+from candlekit.patterns import *
 
 
 # Helper to build candle from OHLC
