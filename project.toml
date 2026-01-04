@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "candlekit"
+version = "1.0.1"
+authors = [
+    {name = "Zhiro Dadkhah", email = "zhirodadkhah@hotmail.com"}
+]
+description = "A lightweight, pandas-friendly Python library for detecting candlestick patterns in financial time-series data"
+readme = "README.md"
+license = {text = "MIT"}
+keywords = ["candlestick", "technical-analysis", "trading", "finance", "pandas", "pattern-recognition"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "pandas>=1.3.0",
+    "numpy>=1.21.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/zhirodadkhah/candlekit"
+Repository = "https://github.com/zhirodadkhah/candlekit"
+"Bug Tracker" = "https://github.com/zhirodadkhah/candlekit/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"candlekit" = "src/candlekit"
+
+[tool.pytest.ini_options]
+testpaths = ["src/candlekit/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+]
