@@ -59,7 +59,7 @@ def detect_pattern_at_index(
     **kwargs
 ) -> bool:
     """
-    Detect whether a given candlestick pattern occurs ending at a specific index in a price DataFrame.
+    Detect whether a given candlekit pattern occurs ending at a specific index in a price DataFrame.
 
     This function dynamically constructs the required number of `CandleStick` objects
     (1, 2, 3, or 5) based on the pattern definition and passes them to the pattern's
@@ -90,7 +90,7 @@ def scan_symbol(
     patterns: list[CandlePatterns] = None
 ) -> list[tuple[int, str, str]]:
     """
-    Scan an entire price series for all occurrences of specified candlestick patterns.
+    Scan an entire price series for all occurrences of specified candlekit patterns.
 
     :param df: A pandas DataFrame with columns 'Open', 'High', 'Low', 'Close'.
                Must have at least one row.
@@ -118,7 +118,7 @@ def scan_symbol_df(
     patterns: list[CandlePatterns] = None
 ) -> pd.DataFrame:
     """
-    Scan for candlestick patterns and return results as a pandas DataFrame.
+    Scan for candlekit patterns and return results as a pandas DataFrame.
 
     Columns:
         - 'symbol': ticker symbol
