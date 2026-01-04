@@ -1,6 +1,6 @@
 from pprint import pprint
 import pandas as pd
-from candlekit import scan_symbol_df, CandlePatterns
+from candlekit import scan_symbol_df, CandlePatterns, scan_symbol
 
 # Example OHLC data
 data = {

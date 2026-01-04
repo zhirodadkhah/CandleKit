@@ -2,15 +2,15 @@ import pandas as pd
 
 class CandleStick:
     """
-    Represents a single OHLC candlestick for technical pattern analysis.
+    Represents a single OHLC candlekit for technical pattern analysis.
 
-    Designed to work seamlessly with Nison-style candlestick pattern detection.
+    Designed to work seamlessly with Nison-style candlekit pattern detection.
     All properties are lightweight and calculated on-the-fly.
     """
 
     def __init__(self, df: pd.DataFrame, index: int) -> None:
         """
-        Initialize a candlestick from a pandas DataFrame at the given row index.
+        Initialize a candlekit from a pandas DataFrame at the given row index.
 
         :param df: DataFrame with columns ['Open', 'High', 'Low', 'Close']
         :param index: Integer row index (0-based)

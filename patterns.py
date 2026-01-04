@@ -4,42 +4,42 @@ import math
 # --- Shared helpers ---
 def is_thick_enough(candle: CandleStick, min_ratio: float) -> bool:
     """Check if candle has a thick body (strong conviction), regardless of direction.
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param min_ratio: Minimum body-to-total-length ratio
     """
     return candle.body_ratio >= min_ratio
 
 def is_thick_bearish(candle: CandleStick, min_ratio: float) -> bool:
     """Check if candle is bearish and has a thick body.
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param min_ratio: Minimum body-to-total-length ratio
     """
     return not candle.is_bullish and candle.body_ratio >= min_ratio
 
 def is_thick_bullish(candle: CandleStick, min_ratio: float) -> bool:
     """Check if candle is bullish and has a thick body.
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param min_ratio: Minimum body-to-total-length ratio
     """
     return candle.is_bullish and candle.body_ratio >= min_ratio
 
 def is_thin_enough(candle: CandleStick, max_ratio: float) -> bool:
     """Check if candle has a thin body (indecision), regardless of direction.
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param max_ratio: Maximum body-to-total-length ratio
     """
     return candle.body_ratio <= max_ratio
 
 def is_thin_bearish(candle: CandleStick, max_ratio: float) -> bool:
     """Check if candle is bearish and has a thin body.
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param max_ratio: Maximum body-to-total-length ratio
     """
     return not candle.is_bullish and candle.body_ratio <= max_ratio
 
 def is_thin_bullish(candle: CandleStick, max_ratio: float) -> bool:
     """Check if candle is bullish and has a thin body.
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param max_ratio: Maximum body-to-total-length ratio
     """
     return candle.is_bullish and candle.body_ratio <= max_ratio
@@ -93,7 +93,7 @@ def _rel_close(a: float, b: float, rel_tol: float = 1e-4, abs_tol: float = 1e-8)
 
 def is_doji(candle: CandleStick, max_body_ratio: float = 0.1) -> bool:
     """Detect general Doji pattern (indecision).
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param max_body_ratio: Maximum body-to-total-length ratio
     :ref: Nison p. 38
     """
@@ -104,7 +104,7 @@ def is_hammer(candle: CandleStick,
               min_lower_wick_to_body: float = 2.0,
               max_upper_wick_ratio: float = 0.33) -> bool:
     """Detect Hammer pattern (bullish reversal after downtrend).
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param max_body_ratio: Maximum body-to-total-length ratio
     :param min_lower_wick_to_body: Minimum required ratio of lower wick to body length
     :param max_upper_wick_ratio: Maximum allowed upper wick as fraction of total length
@@ -121,7 +121,7 @@ def is_shooting_star(candle: CandleStick,
                      min_upper_wick_to_body: float = 2.0,
                      max_lower_wick_ratio: float = 0.33) -> bool:
     """Detect Shooting Star pattern (bearish reversal after uptrend).
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param max_body_ratio: Maximum body-to-total-length ratio
     :param min_upper_wick_to_body: Minimum required ratio of upper wick to body length
     :param max_lower_wick_ratio: Maximum allowed lower wick as fraction of total length
@@ -135,7 +135,7 @@ def is_shooting_star(candle: CandleStick,
 
 def is_bullish_belt_hold(candle: CandleStick, min_body_ratio: float = 0.95, max_wick_ratio: float = 0.05) -> bool:
     """Detect Bullish Belt Hold.
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param min_body_ratio: Minimum body-to-total-length ratio
     :param max_wick_ratio: Max allowed lower/upper wick as fraction of total length (Nison: "no lower shadow")
     :ref: Nison p. 32
@@ -148,7 +148,7 @@ def is_bullish_belt_hold(candle: CandleStick, min_body_ratio: float = 0.95, max_
 
 def is_bearish_belt_hold(candle: CandleStick, min_body_ratio: float = 0.95, max_wick_ratio: float = 0.05) -> bool:
     """Detect Bearish Belt Hold.
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param min_body_ratio: Minimum body-to-total-length ratio
     :param max_wick_ratio: Max allowed lower/upper wick as fraction of total length
     :ref: Nison p. 32
@@ -161,7 +161,7 @@ def is_bearish_belt_hold(candle: CandleStick, min_body_ratio: float = 0.95, max_
 
 def is_bullish_marubozu(candle: CandleStick, max_wick_ratio: float = 0.01) -> bool:
     """Detect Bullish Marubozu (no shadows per Nison).
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param max_wick_ratio: Max allowed wick as fraction of total length (Nison: zero shadows)
     :ref: Nison p. 24
     """
@@ -172,7 +172,7 @@ def is_bullish_marubozu(candle: CandleStick, max_wick_ratio: float = 0.01) -> bo
 
 def is_bearish_marubozu(candle: CandleStick, max_wick_ratio: float = 0.01) -> bool:
     """Detect Bearish Marubozu (no shadows per Nison).
-    :param candle: The candlestick to evaluate
+    :param candle: The candlekit to evaluate
     :param max_wick_ratio: Max allowed wick as fraction of total length (Nison: zero shadows)
     :ref: Nison p. 24
     """
