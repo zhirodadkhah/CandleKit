@@ -1,3 +1,4 @@
+
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -8,10 +9,10 @@ version = "1.0.1"
 authors = [
     {name = "Zhiro Dadkhah", email = "zhirodadkhah@hotmail.com"}
 ]
-description = "A lightweight, pandas-friendly Python library for detecting candlestick patterns in financial time-series data"
+description = "A lightweight, pandas-friendly Python library for detecting candlestick patterns in financial time-series data, based on NISON book."
 readme = "README.md"
 license = {text = "MIT"}
-keywords = ["candlestick", "technical-analysis", "trading", "finance", "pandas", "pattern-recognition"]
+keywords = ["candlestick", "technical-analysis", "trading", "finance", "pandas", "pattern-recognition", "NISON patterns"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Financial and Insurance Industry",
@@ -41,20 +42,14 @@ Repository = "https://github.com/zhirodadkhah/candlekit"
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.setuptools.package-dir]
-"candlekit" = "src/candlekit"
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["src/candlekit/tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "black>=23.0.0",
-    "flake8>=6.0.0",
-    "mypy>=1.0.0",
-]

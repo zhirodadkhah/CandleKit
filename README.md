@@ -173,7 +173,7 @@ Each pattern has sensible defaults, but you can adjust:
 The library uses `CandleStick` objects internally. You can access their properties:
 
 ```python
-from candlekit.entity import CandleStick
+from candlekit.src.candlekit.entity import CandleStick
 
 candle = CandleStick(df, index=0)
 print(f"Body length: {candle.body_length}")

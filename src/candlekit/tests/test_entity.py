@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 import math
-from candlekit.entity import CandleStick  # 👈 Replace with your actual module name
+from candlekit.src.candlekit.entity import CandleStick  # 👈 Replace with your actual module name
 
 
 def make_candle(o, h, l, c):

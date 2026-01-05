@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from candlekit.utils import (
+from candlekit import (
     detect_pattern_at_index,
     scan_symbol,
     scan_symbol_df,
